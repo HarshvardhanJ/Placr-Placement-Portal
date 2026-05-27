@@ -1,0 +1,15 @@
+services:
+  flask:
+    build: ./backend
+    ports:
+      - "5000:5000"
+
+  vue:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
