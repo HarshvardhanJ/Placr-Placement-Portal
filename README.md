@@ -1,2 +1,2 @@
-# jobed
+# Placr
 Placement Portal Application - V2
