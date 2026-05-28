@@ -3,6 +3,8 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
+    env_file:
+      - .env
 
   vue:
     build: ./frontend
@@ -13,3 +15,4 @@ services:
       - /app/node_modules
     stdin_open: true
     tty: true
+
