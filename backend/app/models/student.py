@@ -15,10 +15,11 @@ class Student(db.Model):
         db.String(36), db.ForeignKey("users.user_id"), nullable=False, unique=True
     )
     name = db.Column(db.String, nullable=False)
+    roll_no = db.Column(db.String, unique=True, nullable=False)
     phone_number = db.Column(db.String, nullable=True)
-    department = db.Column(db.String, nullable=False)
-    cgpa = db.Column(db.Float, nullable=False)
-    year = db.Column(db.Integer, nullable=False)
-    resume_path = db.Column(db.String, nullable=False)
+    department = db.Column(db.String, nullable=True)
+    cgpa = db.Column(db.Float, nullable=True)
+    year = db.Column(db.Integer, nullable=True)
+    resume_path = db.Column(db.String, nullable=True)
 
     applications = db.relationship("Application", backref="student", lazy=True)
