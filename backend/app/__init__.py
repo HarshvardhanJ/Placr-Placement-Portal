@@ -10,6 +10,7 @@ from app.models.drive import Drive
 from app.models.application import Application
 from app.models.placement import Placement
 from app.api.auth.routes import auth_bp
+from app.api.admin.routes import admin_bp
 
 
 def create_app():
@@ -22,4 +23,5 @@ def create_app():
     jwt.init_app(app)
     # Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
     return app
