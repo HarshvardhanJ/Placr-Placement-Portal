@@ -31,3 +31,17 @@ class Company(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     drives = db.relationship("Drive", backref="company", lazy=True)
+
+    def to_dict(self):
+        return {
+            "company_id": self.company_id,
+            "user_id": self.user_id,
+            "name": self.name,
+            "contact": self.contact,
+            "website": self.website,
+            "approval_status": self.approval_status.value,
+            "industry": self.industry,
+            "description": self.description,
+            "location": self.location,
+            "created_at": str(self.created_at),
+        }
