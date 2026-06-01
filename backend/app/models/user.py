@@ -3,7 +3,7 @@ import uuid
 import enum
 
 
-class RoleEnum(enum.Enum):
+class UserRoleEnum(enum.Enum):
     admin = "admin"
     student = "student"
     company = "company"
@@ -17,7 +17,7 @@ class User(db.Model):
     )
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
-    role = db.Column(db.Enum(RoleEnum), nullable=False)
+    role = db.Column(db.Enum(UserRoleEnum), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     is_active = db.Column(db.Boolean, default=True)
 

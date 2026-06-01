@@ -3,10 +3,11 @@ import uuid
 import enum
 
 
-class StatusEnum(enum.Enum):
+class DriveStatusEnum(enum.Enum):
     pending = "pending"
     approved = "approved"
     closed = "closed"
+    rejected = "rejected"
 
 
 class Drive(db.Model):
@@ -22,7 +23,9 @@ class Drive(db.Model):
     company_id = db.Column(
         db.String(36), db.ForeignKey("companies.company_id"), nullable=False
     )
-    status = db.Column(db.Enum(StatusEnum), nullable=False, default=StatusEnum.pending)
+    approval_status = db.Column(
+        db.Enum(DriveStatusEnum), nullable=False, default=DriveStatusEnum.pending
+    )
     job_title = db.Column(db.String, nullable=False)
     job_description = db.Column(db.String, nullable=True)
     job_location = db.Column(db.String, nullable=True, default="NA")
@@ -35,3 +38,19 @@ class Drive(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     applications = db.relationship("Application", backref="drive", lazy=True)
+
+    def to_dict(self):
+        return {
+            "drive_id": self.drive_id,
+            "company_id": self.company_id,
+            "job_title": self.job_title,
+            "job_description": self.job_description,
+            "job_location": self.job_location,
+            "application_deadline": str(self.application_deadline),
+            "min_cgpa": self.min_cgpa,
+            "approval_status": self.approval_status.value,
+            "year": self.year,
+            "no_openings": self.no_openings,
+            "salary": self.salary,
+            "created_at": str(self.created_at),
+        }

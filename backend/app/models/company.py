@@ -5,7 +5,7 @@ import uuid
 import enum
 
 
-class StatusEnum(enum.Enum):
+class CompanyStatusEnum(enum.Enum):
     approved = "approved"
     not_approved = "not_approved"
 
@@ -23,7 +23,9 @@ class Company(db.Model):
     contact = db.Column(db.String, nullable=True)
     website = db.Column(db.String, nullable=True)
     approval_status = db.Column(
-        db.Enum(StatusEnum), nullable=False, default=StatusEnum.not_approved
+        db.Enum(CompanyStatusEnum),
+        nullable=False,
+        default=CompanyStatusEnum.not_approved,
     )
     industry = db.Column(db.String, nullable=True)
     description = db.Column(db.String, nullable=True)

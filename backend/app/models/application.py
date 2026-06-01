@@ -3,7 +3,7 @@ import uuid
 import enum
 
 
-class StatusEnum(enum.Enum):
+class ApplicationStatusEnum(enum.Enum):
     applied = "applied"
     shortlisted = "shortlisted"
     selected = "selected"
@@ -29,7 +29,11 @@ class Application(db.Model):
         db.String(36), db.ForeignKey("drives.drive_id"), nullable=False
     )
     application_date = db.Column(db.DateTime, default=db.func.now())
-    status = db.Column(db.Enum(StatusEnum), nullable=False, default=StatusEnum.applied)
+    status = db.Column(
+        db.Enum(ApplicationStatusEnum),
+        nullable=False,
+        default=ApplicationStatusEnum.applied,
+    )
     remarks = db.Column(db.String, nullable=True)
     interview_date = db.Column(db.DateTime, nullable=True)
     interview_type = db.Column(db.Enum(InterviewEnum), nullable=True)

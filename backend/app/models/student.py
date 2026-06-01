@@ -21,5 +21,19 @@ class Student(db.Model):
     cgpa = db.Column(db.Float, nullable=True)
     year = db.Column(db.Integer, nullable=True)
     resume_path = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
     applications = db.relationship("Application", backref="student", lazy=True)
+
+    def to_dict(self):
+        return {
+            "student_id": self.student_id,
+            "user_id": self.user_id,
+            "name": self.name,
+            "roll_no": self.roll_no,
+            "phone_number": self.phone_number,
+            "department": self.department,
+            "cgpa": self.cgpa,
+            "year": self.year,
+            "created_at": str(self.created_at),
+        }

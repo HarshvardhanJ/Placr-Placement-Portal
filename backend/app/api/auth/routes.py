@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 from app.extensions import bcrypt, db
 from app.models.company import Company
 from app.models.student import Student
-from app.models.user import User, RoleEnum
+from app.models.user import User, UserRoleEnum
 
 
 auth_bp = Blueprint("auth_bp", __name__)
@@ -52,7 +52,7 @@ def register_student():
     repeat_password = data["repeat_password"]
     name = data["name"]
     roll_no = data["roll_no"]
-    role = RoleEnum.student
+    role = UserRoleEnum.student
 
     if User.query.filter_by(email=email).first():
         error = {"error": "User already exists"}
@@ -96,7 +96,7 @@ def register_company():
     password = data["password"]
     repeat_password = data["repeat_password"]
     name = data["name"]
-    role = RoleEnum.company
+    role = UserRoleEnum.company
 
     if User.query.filter_by(email=email).first():
         error = {"error": "User already exists"}
@@ -128,9 +128,9 @@ def me():
     user_id = get_jwt_identity()
     user = User.query.filter_by(user_id=user_id).first()
 
-    if user.role == RoleEnum.admin:
+    if user.role == UserRoleEnum.admin:
         return jsonify({"email": user.email, "role": user.role.value}), 200
-    elif user.role == RoleEnum.student:
+    elif user.role == UserRoleEnum.student:
         student = Student.query.filter_by(user_id=user_id).first()
         return jsonify(
             {
@@ -141,7 +141,7 @@ def me():
                 "department": student.department or None,
             }
         ), 200
-    elif user.role == RoleEnum.company:
+    elif user.role == UserRoleEnum.company:
         company = Company.query.filter_by(user_id=user_id).first()
         return jsonify(
             {
