@@ -34,7 +34,7 @@ class Drive(db.Model):
     min_cgpa = db.Column(db.Float, nullable=True)
     year = db.Column(db.Integer, nullable=True)
     no_openings = db.Column(db.Integer, nullable=True)
-    salary = db.Column(db.Integer, nullable=False)
+    salary = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     applications = db.relationship("Application", backref="drive", lazy=True)
