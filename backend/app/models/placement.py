@@ -4,6 +4,7 @@ import uuid
 
 class Placement(db.Model):
     __tablename__ = "placements"
+    __table_args__ = (db.UniqueConstraint("application_id"),)
 
     placement_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())

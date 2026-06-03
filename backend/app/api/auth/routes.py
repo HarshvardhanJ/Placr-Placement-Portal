@@ -22,7 +22,10 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    if not user or not bcrypt.check_password_hash(user.password, password):
+    if not user:
+        return jsonify({"error": "User does not exist"}), 404
+
+    if not bcrypt.check_password_hash(user.password, password):
         error = {"error": "Wrong email or password!"}
         return jsonify(error), 401
 
@@ -148,6 +151,6 @@ def me():
                 "email": user.email,
                 "role": user.role.value,
                 "name": company.name,
-                "approval_status": company.approval_status,
+                "approval_status": company.approval_status.value,
             }
         ), 200
