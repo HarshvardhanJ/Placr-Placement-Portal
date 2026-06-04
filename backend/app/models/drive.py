@@ -41,6 +41,7 @@ class Drive(db.Model):
 
     def to_dict(self):
         return {
+            "company_name": self.company.name,
             "drive_id": self.drive_id,
             "company_id": self.company_id,
             "job_title": self.job_title,
