@@ -43,13 +43,15 @@ class Application(db.Model):
         return {
             "application_id": self.application_id,
             "student_id": self.student_id,
+            "drive_id": self.drive_id,
             "application_date": str(self.application_date),
             "status": self.status.value,
             "remarks": self.remarks,
-            "interview_date": str(self.interview_date)
-            if self.status == ApplicationStatusEnum.shortlisted
-            else "NA",
-            "interview_type": self.interview_type.value
-            if self.status == ApplicationStatusEnum.shortlisted
-            else "NA",
+            "interview_date": (
+                str(self.interview_date) if self.interview_date else None
+            ),
+            "interview_type": (
+                self.interview_type.value if self.interview_type else None
+            ),
+            "drive": self.drive.to_dict(),
         }

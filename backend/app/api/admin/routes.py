@@ -50,9 +50,11 @@ def approve_company(id):
         company.approval_status = CompanyStatusEnum.approved
         db.session.commit()
         return jsonify({"success": f"Company {company.name} approved"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update company {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update company {id}", "details": str(e)}
+        ), 500
 
 
 @admin_bp.route("/companies/<id>/reject", methods=["PUT"])
@@ -65,9 +67,11 @@ def reject_company(id):
         company.approval_status = CompanyStatusEnum.not_approved
         db.session.commit()
         return jsonify({"success": f"Company {company.name} rejected"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update company {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update company {id}", "details": str(e)}
+        ), 500
 
 
 @admin_bp.route("/companies/<id>/blacklist", methods=["PUT"])
@@ -81,9 +85,11 @@ def blacklist_company(id):
         user.is_active = False
         db.session.commit()
         return jsonify({"success": f"Company {company.name} blacklisted"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update company {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update company {id}", "details": str(e)}
+        ), 500
 
 
 # ADMIN - STUDENT ROUTES
@@ -111,9 +117,11 @@ def blacklist_student(id):
         user.is_active = False
         db.session.commit()
         return jsonify({"success": f"Student {student.name} blacklisted"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update student {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update student {id}", "details": str(e)}
+        ), 500
 
 
 # ADMIN - DRIVES ROUTES
@@ -134,9 +142,11 @@ def approve_drives(id):
         drive.approval_status = DriveStatusEnum.approved
         db.session.commit()
         return jsonify({"success": f"Drive {id} approved"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update drive {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update drive {id}", "details": str(e)}
+        ), 500
 
 
 @admin_bp.route("/drives/<id>/reject", methods=["PUT"])
@@ -149,6 +159,8 @@ def reject_drives(id):
         drive.approval_status = DriveStatusEnum.rejected
         db.session.commit()
         return jsonify({"success": f"Drive {id} rejected"}), 200
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to update drive {id}"}), 500
+        return jsonify(
+            {"error": f"Failed to update drive {id}", "details": str(e)}
+        ), 500

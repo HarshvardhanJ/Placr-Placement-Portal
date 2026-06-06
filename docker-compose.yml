@@ -6,9 +6,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ${PWD}/backend/app
+      - ./backend/app:/app/app
+      - ./backend/uploads/resumes:/app/uploads/resumes
       - flask_data:/app/instance
-
 
   vue:
     build: ./frontend

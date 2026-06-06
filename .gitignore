@@ -1,3 +1,7 @@
 .env
 backend/.env
 frontend/.env
+backend/uploads/resumes/*
+!backend/uploads/resumes/.gitkeep
+__pycache__/
+*.py[cod]

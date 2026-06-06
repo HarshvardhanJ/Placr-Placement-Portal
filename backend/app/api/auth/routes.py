@@ -64,6 +64,8 @@ def register_student():
     if password != repeat_password:
         return jsonify({"error": "Password do not match"}), 400
 
+    if Student.query.filter_by(roll_no=roll_no).first():
+        return jsonify({"error": "Student with this roll number already exists"}), 409
     hashed_pass = bcrypt.generate_password_hash(password).decode("utf-8")
 
     try:
@@ -76,7 +78,7 @@ def register_student():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": "Registration failed"}), 500
+        return jsonify({"error": "Registration failed", "details": str(e)}), 500
 
     return jsonify({"success": "User created successfully!"}), 201
 
@@ -108,6 +110,8 @@ def register_company():
     if password != repeat_password:
         return jsonify({"error": "Password do not match"}), 400
 
+    if Company.query.filter_by(name=name).first():
+        return jsonify({"error": "Company with this name already exists"}), 409
     hashed_pass = bcrypt.generate_password_hash(password).decode("utf-8")
 
     try:
@@ -120,7 +124,7 @@ def register_company():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": "Registration failed"}), 500
+        return jsonify({"error": "Registration failed", "details": str(e)}), 500
 
     return jsonify({"success": "User created successfully!"}), 201
 
