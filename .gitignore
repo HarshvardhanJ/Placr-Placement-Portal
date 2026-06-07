@@ -3,5 +3,7 @@ backend/.env
 frontend/.env
 backend/uploads/resumes/*
 !backend/uploads/resumes/.gitkeep
+backend/uploads/offer_letters/*
+!backend/uploads/offer_letters/.gitkeep
 __pycache__/
 *.py[cod]

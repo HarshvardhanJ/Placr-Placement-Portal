@@ -1,6 +1,6 @@
 from datetime import datetime
 import uuid
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity
 import os
 from app.extensions import db
@@ -8,6 +8,8 @@ from app.models.application import Application, ApplicationStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.student import Student
 from app.models.user import UserRoleEnum
+from app.models.company import Company
+from app.models.placement import Placement
 from app.utils.decorators import active_required, role_required
 
 student_api = Blueprint("student_api", __name__)
@@ -15,6 +17,7 @@ student_api = Blueprint("student_api", __name__)
 
 @student_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.student)
+@active_required
 def student_dashboard():
     user_id = get_jwt_identity()
 
@@ -362,3 +365,190 @@ def get_student_applications():
             "applications": [app.to_dict() for app in applications],
         }
     ), 200
+
+
+@student_api.route("/drives", methods=["GET"])
+@role_required(UserRoleEnum.student)
+@active_required
+def get_available_drives():
+    user_id = get_jwt_identity()
+
+    student = Student.query.filter_by(user_id=user_id).first()
+
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    if student.department is None or student.cgpa is None or student.year is None:
+        return jsonify(
+            {
+                "error": (
+                    "Complete your profile "
+                    "(department, CGPA, year) before viewing drives"
+                )
+            }
+        ), 400
+
+    search = request.args.get("search", "").strip()
+
+    applied_drive_ids = {
+        app.drive_id
+        for app in Application.query.filter_by(student_id=student.student_id).all()
+    }
+
+    query = Drive.query.join(Company).filter(
+        Drive.approval_status == DriveStatusEnum.approved,
+        Drive.application_deadline > datetime.utcnow(),
+        db.or_(
+            Drive.min_cgpa == None,
+            Drive.min_cgpa <= student.cgpa,
+        ),
+        db.or_(
+            Drive.year == None,
+            Drive.year == student.year,
+        ),
+    )
+
+    if search:
+        query = query.filter(
+            db.or_(
+                Company.name.ilike(f"%{search}%"),
+                Drive.job_title.ilike(f"%{search}%"),
+                Drive.job_description.ilike(f"%{search}%"),
+            )
+        )
+
+    drives = query.all()
+
+    eligible_drives = []
+
+    for drive in drives:
+        branches = [
+            branch.strip() for branch in (drive.eligible_branch or "").split(",")
+        ]
+
+        if (
+            "ALL" in branches or student.department in branches
+        ) and drive.drive_id not in applied_drive_ids:
+            eligible_drives.append(drive)
+
+    eligible_drives.sort(key=lambda drive: drive.application_deadline)
+
+    return jsonify(
+        {
+            "count": len(eligible_drives),
+            "drives": [drive.to_dict() for drive in eligible_drives],
+        }
+    ), 200
+
+
+@student_api.route("/placements", methods=["GET"])
+@role_required(UserRoleEnum.student)
+@active_required
+def get_student_placements():
+    user_id = get_jwt_identity()
+
+    student = Student.query.filter_by(user_id=user_id).first()
+
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    placements = (
+        Placement.query.join(Application)
+        .filter(Application.student_id == student.student_id)
+        .all()
+    )
+
+    return jsonify(
+        {
+            "count": len(placements),
+            "placements": [
+                {
+                    "placement_id": placement.placement_id,
+                    "company": (placement.application.drive.company.name),
+                    "job_title": (placement.application.drive.job_title),
+                    "salary": placement.salary,
+                    "joining_date": (
+                        str(placement.joining_date) if placement.joining_date else None
+                    ),
+                    "offer_letter_available": (placement.offer_letter_path is not None),
+                    "created_at": str(placement.created_at),
+                }
+                for placement in placements
+            ],
+        }
+    ), 200
+
+
+@student_api.route("/placements/<placement_id>", methods=["GET"])
+@role_required(UserRoleEnum.student)
+@active_required
+def get_placement_details(placement_id):
+    user_id = get_jwt_identity()
+
+    student = Student.query.filter_by(user_id=user_id).first()
+
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    placement = (
+        Placement.query.join(Application)
+        .filter(
+            Placement.placement_id == placement_id,
+            Application.student_id == student.student_id,
+        )
+        .first()
+    )
+
+    if not placement:
+        return jsonify({"error": "Placement not found"}), 404
+
+    return jsonify(
+        {
+            "placement_id": placement.placement_id,
+            "company": placement.application.drive.company.name,
+            "job_title": placement.application.drive.job_title,
+            "salary": placement.salary,
+            "joining_date": (
+                str(placement.joining_date) if placement.joining_date else None
+            ),
+            "offer_letter_available": bool(placement.offer_letter_path),
+            "created_at": str(placement.created_at),
+        }
+    ), 200
+
+
+@student_api.route("/placements/<placement_id>/offer-letter", methods=["GET"])
+@role_required(UserRoleEnum.student)
+@active_required
+def download_offer_letter(placement_id):
+    user_id = get_jwt_identity()
+
+    student = Student.query.filter_by(user_id=user_id).first()
+
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    placement = (
+        Placement.query.join(Application)
+        .filter(
+            Placement.placement_id == placement_id,
+            Application.student_id == student.student_id,
+        )
+        .first()
+    )
+
+    if not placement:
+        return jsonify({"error": "Placement not found"}), 404
+
+    if not placement.offer_letter_path:
+        return jsonify({"error": "Offer letter not available"}), 404
+
+    if not os.path.exists(placement.offer_letter_path):
+        return jsonify({"error": "Offer letter file missing"}), 404
+
+    return send_file(
+        placement.offer_letter_path,
+        as_attachment=True,
+        download_name=f"offer_letter_{student.name}.pdf",
+        mimetype="application/pdf",
+    )

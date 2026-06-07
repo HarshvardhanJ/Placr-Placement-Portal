@@ -1,56 +1,128 @@
-from flask import Blueprint, json, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from datetime import datetime
+from app.extensions import db
 from app.models.application import Application, ApplicationStatusEnum, InterviewEnum
 from app.models.company import Company
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.placement import Placement
-from app.utils.decorators import approved_company_required, role_required
 from app.models.user import UserRoleEnum
-from app.extensions import db
-from datetime import datetime
-
+from app.utils.decorators import approved_company_required, role_required
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity
+import os
+import uuid
 
 company_api = Blueprint("company_api", __name__)
 
 
 @company_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.company)
+@approved_company_required
 def company_dashboard():
     user_id = get_jwt_identity()
+
     company = Company.query.filter_by(user_id=user_id).first()
+
     if not company:
         return jsonify({"error": "Company not found"}), 404
-    drives = Drive.query.filter_by(company_id=company.company_id)
-    drive_count = drives.count()
-    selected_count = (
-        Application.query.join(Drive)
-        .filter(
-            Drive.company_id == company.company_id,
-            Application.status == ApplicationStatusEnum.selected,
-        )
-        .count()
+
+    drives = (
+        Drive.query.filter_by(company_id=company.company_id)
+        .order_by(Drive.created_at.desc())
+        .all()
     )
-    application_count = (
+
+    applications = (
         Application.query.join(Drive)
         .filter(Drive.company_id == company.company_id)
-        .count()
+        .all()
     )
+
+    shortlisted = [
+        app for app in applications if app.status == ApplicationStatusEnum.shortlisted
+    ]
+
+    selected = [
+        app for app in applications if app.status == ApplicationStatusEnum.selected
+    ]
+
+    upcoming_interviews = [
+        app
+        for app in shortlisted
+        if app.interview_date and app.interview_date > datetime.utcnow()
+    ]
 
     return jsonify(
         {
             "company": {
-                "name": company.name,
                 "company_id": company.company_id,
-                "description": company.description,
+                "name": company.name,
                 "industry": company.industry,
                 "location": company.location,
+                "description": company.description,
                 "approval_status": company.approval_status.value,
             },
-            "status": {
-                "total_drives": drive_count,
-                "total_applications": application_count,
-                "total_selected": selected_count,
+            "counts": {
+                "drives": len(drives),
+                "applications": len(applications),
+                "shortlisted": len(shortlisted),
+                "selected": len(selected),
+                "upcoming_interviews": len(upcoming_interviews),
             },
+            "recent_drives": [
+                {
+                    "drive_id": drive.drive_id,
+                    "job_title": drive.job_title,
+                    "approval_status": drive.approval_status.value,
+                    "application_deadline": str(drive.application_deadline),
+                    "applications": len(drive.applications),
+                }
+                for drive in drives[:5]
+            ],
+            "recent_applications": [
+                {
+                    "application_id": app.application_id,
+                    "student_name": app.student.name,
+                    "roll_no": app.student.roll_no,
+                    "job_title": app.drive.job_title,
+                    "status": app.status.value,
+                    "applied_on": str(app.application_date),
+                }
+                for app in sorted(
+                    applications,
+                    key=lambda a: a.application_date,
+                    reverse=True,
+                )[:10]
+            ],
+            "shortlisted_candidates": [
+                {
+                    "application_id": app.application_id,
+                    "student_name": app.student.name,
+                    "roll_no": app.student.roll_no,
+                    "job_title": app.drive.job_title,
+                    "interview_date": (
+                        str(app.interview_date) if app.interview_date else None
+                    ),
+                    "interview_type": (
+                        app.interview_type.value if app.interview_type else None
+                    ),
+                }
+                for app in shortlisted[:10]
+            ],
+            "upcoming_interviews": [
+                {
+                    "application_id": app.application_id,
+                    "student_name": app.student.name,
+                    "job_title": app.drive.job_title,
+                    "interview_date": str(app.interview_date),
+                    "interview_type": (
+                        app.interview_type.value if app.interview_type else None
+                    ),
+                }
+                for app in sorted(
+                    upcoming_interviews,
+                    key=lambda a: a.interview_date,
+                )
+            ],
         }
     ), 200
 
@@ -69,6 +141,7 @@ def get_company_profile():
 
 @company_api.route("/profile", methods=["PUT"])
 @role_required(UserRoleEnum.company)
+@approved_company_required
 def update_company_profile():
     user_id = get_jwt_identity()
     company = Company.query.filter_by(user_id=user_id).first()
@@ -112,6 +185,7 @@ def update_company_profile():
 
 @company_api.route("/drives", methods=["GET"])
 @role_required(UserRoleEnum.company)
+@approved_company_required
 def get_company_drives():
     user_id = get_jwt_identity()
     company = Company.query.filter_by(user_id=user_id).first()
@@ -182,6 +256,7 @@ def create_company_drives():
 
 @company_api.route("/drives/<id>", methods=["GET"])
 @role_required(UserRoleEnum.company)
+@approved_company_required
 def get_drive_by_id(id):
     user_id = get_jwt_identity()
     company = Company.query.filter_by(user_id=user_id).first()
@@ -315,7 +390,7 @@ def update_application_status(id, app_id):
     application.status = new_status
     application.remarks = remarks
 
-    if new_status == ApplicationStatusEnum.selected:
+    if new_status == ApplicationStatusEnum.shortlisted:
         interview_date = data.get("interview_date")
         interview_type = data.get("interview_type")
 
@@ -327,6 +402,15 @@ def update_application_status(id, app_id):
         application.interview_date = datetime.fromisoformat(interview_date)
         application.interview_type = InterviewEnum(interview_type)
 
+    if new_status == ApplicationStatusEnum.selected:
+        existing_placement = Placement.query.filter_by(
+            application_id=application.application_id
+        ).first()
+
+        if not existing_placement:
+            placement = Placement(application_id=application.application_id)
+
+            db.session.add(placement)
     db.session.commit()
     return jsonify(
         {
@@ -340,75 +424,254 @@ def update_application_status(id, app_id):
     ), 200
 
 
-@company_api.route(
-    "/drives/<string:id>/applications/<string:app_id>/placement", methods=["POST"]
-)
+@company_api.route("/placements", methods=["GET"])
 @role_required(UserRoleEnum.company)
-def create_placement(id, app_id):
+@approved_company_required
+def get_company_placements():
     user_id = get_jwt_identity()
 
     company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    placements = (
+        Placement.query.join(Application)
+        .join(Drive)
+        .filter(Drive.company_id == company.company_id)
+        .all()
+    )
+
+    return jsonify(
+        {
+            "count": len(placements),
+            "placements": [
+                {
+                    "placement_id": placement.placement_id,
+                    "student_name": placement.application.student.name,
+                    "roll_no": placement.application.student.roll_no,
+                    "job_title": placement.application.drive.job_title,
+                    "salary": placement.salary,
+                    "joining_date": (
+                        str(placement.joining_date) if placement.joining_date else None
+                    ),
+                    "offer_letter_uploaded": bool(placement.offer_letter_path),
+                    "created_at": str(placement.created_at),
+                }
+                for placement in placements
+            ],
+        }
+    ), 200
+
+
+@company_api.route("/placements/<placement_id>", methods=["PUT"])
+@role_required(UserRoleEnum.company)
+@approved_company_required
+def update_placement(placement_id):
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    placement = (
+        Placement.query.join(Application)
+        .join(Drive)
+        .filter(
+            Placement.placement_id == placement_id,
+            Drive.company_id == company.company_id,
+        )
+        .first()
+    )
+
+    if not placement:
+        return jsonify({"error": "Placement not found"}), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    salary = data.get("salary")
+    joining_date = data.get("joining_date")
+
+    if salary is None:
+        return jsonify({"error": "salary is required"}), 400
+
+    if salary <= 0:
+        return jsonify({"error": "salary must be greater than 0"}), 400
+
+    if joining_date is None:
+        return jsonify({"error": "joining_date is required"}), 400
+
+    try:
+        joining_date_obj = datetime.fromisoformat(joining_date)
+    except ValueError:
+        return jsonify(
+            {
+                "error": (
+                    "Invalid joining_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"
+                )
+            }
+        ), 400
+
+    try:
+        placement.salary = salary
+        placement.joining_date = joining_date_obj
+
+        db.session.commit()
+
+        return jsonify(
+            {
+                "message": "Placement updated successfully",
+                "placement": {
+                    "placement_id": placement.placement_id,
+                    "application_id": placement.application_id,
+                    "student_name": placement.application.student.name,
+                    "job_title": placement.application.drive.job_title,
+                    "salary": placement.salary,
+                    "joining_date": str(placement.joining_date),
+                    "offer_letter_uploaded": (placement.offer_letter_path is not None),
+                    "created_at": str(placement.created_at),
+                },
+            }
+        ), 200
+
+    except Exception as e:
+        db.session.rollback()
+
+        return jsonify(
+            {
+                "error": "Failed to update placement",
+                "details": str(e),
+            }
+        ), 500
+
+
+@company_api.route("/placements/<placement_id>/offer-letter", methods=["POST"])
+@role_required(UserRoleEnum.company)
+@approved_company_required
+def upload_offer_letter(placement_id):
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    placement = (
+        Placement.query.join(Application)
+        .join(Drive)
+        .filter(
+            Placement.placement_id == placement_id,
+            Drive.company_id == company.company_id,
+        )
+        .first()
+    )
+
+    if not placement:
+        return jsonify({"error": "Placement not found"}), 404
+
+    offer_letter = request.files.get("offer_letter")
+
+    if not offer_letter:
+        return jsonify({"error": "Offer letter file is required"}), 400
+
+    if not offer_letter.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Only PDF files are allowed"}), 400
+
+    filepath = None
+
+    try:
+        old_offer_letter_path = placement.offer_letter_path
+
+        unique_filename = f"{placement.placement_id}_{uuid.uuid4()}.pdf"
+
+        upload_folder = os.path.join(
+            os.getcwd(),
+            "uploads",
+            "offer_letters",
+        )
+
+        os.makedirs(upload_folder, exist_ok=True)
+
+        filepath = os.path.join(
+            upload_folder,
+            unique_filename,
+        )
+
+        offer_letter.save(filepath)
+
+        placement.offer_letter_path = filepath
+
+        db.session.commit()
+
+        if (
+            old_offer_letter_path
+            and old_offer_letter_path != filepath
+            and os.path.exists(old_offer_letter_path)
+        ):
+            os.remove(old_offer_letter_path)
+
+        return jsonify(
+            {
+                "message": "Offer letter uploaded successfully",
+                "placement_id": placement.placement_id,
+                "offer_letter_path": filepath,
+            }
+        ), 200
+
+    except Exception as e:
+        db.session.rollback()
+
+        if filepath and os.path.exists(filepath):
+            os.remove(filepath)
+
+        return jsonify(
+            {
+                "error": "Failed to upload offer letter",
+                "details": str(e),
+            }
+        ), 500
+
+
+@company_api.route("/drives/<id>/close", methods=["PUT"])
+@role_required(UserRoleEnum.company)
+@approved_company_required
+def close_drive(id):
+    user_id = get_jwt_identity()
+    company = Company.query.filter_by(user_id=user_id).first()
+
     if not company:
         return jsonify({"error": "Company not found"}), 404
 
     drive = Drive.query.filter_by(drive_id=id, company_id=company.company_id).first()
 
     if not drive:
-        return jsonify({"error": f"Failed to find drive with id {id}"}), 404
+        return jsonify({"error": "Drive not found"}), 404
 
-    application = Application.query.filter_by(
-        application_id=app_id, drive_id=drive.drive_id
-    ).first()
-
-    if not application:
-        return jsonify({"error": f"Failed to find application with id {app_id}"}), 404
-
-    if application.status != ApplicationStatusEnum.selected:
-        return jsonify({"error": "Only selected applications can be placed"}), 400
-
-    if application.placement:
-        return jsonify({"error": "Placement already exists for this application"}), 409
-
-    data = request.get_json()
-
-    salary = data.get("salary")
-    try:
-        joining_date_obj = datetime.fromisoformat(joining_date)
-    except ValueError:
-        return jsonify({"error": "Invalid joining_date format"}), 400
-    offer_letter_path = data.get("offer_letter_path")
-
-    if salary is None:
-        return jsonify({"error": "salary is required"}), 400
-
-    if joining_date is None:
-        return jsonify({"error": "joining_date is required"}), 400
+    if drive.approval_status == DriveStatusEnum.closed:
+        return jsonify({"error": "Drive is already closed"}), 409
 
     try:
-        placement = Placement(
-            application_id=application.application_id,
-            salary=salary,
-            joining_date=joining_date_obj,
-            offer_letter_path=offer_letter_path,
-        )
-
-        db.session.add(placement)
+        drive.approval_status = DriveStatusEnum.closed
         db.session.commit()
 
         return jsonify(
             {
-                "message": "Placement created successfully",
-                "placement": {
-                    "placement_id": placement.placement_id,
-                    "application_id": placement.application_id,
-                    "salary": placement.salary,
-                    "joining_date": str(placement.joining_date),
-                    "offer_letter_path": placement.offer_letter_path,
-                    "created_at": str(placement.created_at),
-                },
+                "message": "Drive closed successfully",
+                "drive_id": drive.drive_id,
+                "status": drive.approval_status.value,
             }
-        ), 201
+        ), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+
+        return jsonify(
+            {
+                "error": "Failed to close drive",
+                "details": str(e),
+            }
+        ), 500

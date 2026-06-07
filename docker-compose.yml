@@ -9,6 +9,7 @@ services:
       - ./backend/app:/app/app
       - ./backend/uploads/resumes:/app/uploads/resumes
       - flask_data:/app/instance
+      - ./uploads/offer_letters:/app/uploads/offer_letters
 
   vue:
     build: ./frontend
