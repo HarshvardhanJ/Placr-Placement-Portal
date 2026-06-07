@@ -1,6 +1,4 @@
-from flask import Blueprint, json, jsonify
-from app.models import company
-from app.models import drive
+from flask import Blueprint, json, jsonify, request
 from app.models.user import UserRoleEnum
 from app.utils.decorators import role_required
 from app.models.user import User
@@ -30,7 +28,19 @@ def admin_dashboard():
 @admin_bp.route("/companies", methods=["GET"])
 @role_required(UserRoleEnum.admin)
 def admin_companies():
-    companies = Company.query.all()
+    search = request.args.get("search", "")
+    query = Company.query
+
+    search = search.strip() if search else search
+    if search:
+        query = query.filter(
+            db.or_(
+                Company.name.ilike(f"%{search}%"),
+                Company.industry.ilike(f"%{search}%"),
+            )
+        )
+
+    companies = query.all()
     result = []
     for c in companies:
         user = User.query.filter_by(user_id=c.user_id).first()
@@ -96,7 +106,20 @@ def blacklist_company(id):
 @admin_bp.route("/students", methods=["GET"])
 @role_required(UserRoleEnum.admin)
 def admin_students():
-    students = Student.query.all()
+    search = request.args.get("search", "")
+    query = Student.query
+
+    search = search.strip() if search else search
+    if search:
+        query = query.filter(
+            db.or_(
+                Student.name.ilike(f"%{search}%"),
+                Student.roll_no.ilike(f"%{search}%"),
+                Student.phone_number.ilike(f"%{search}%"),
+            )
+        )
+
+    students = query.all()
     result = []
     for s in students:
         user = User.query.filter_by(user_id=s.user_id).first()
