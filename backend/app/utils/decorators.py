@@ -40,3 +40,22 @@ def approved_company_required(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def active_required(f):
+    @wraps(f)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+
+        user = User.query.filter_by(user_id=user_id).first()
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        if not user.is_active:
+            return jsonify({"error": "Account has been disabled"}), 403
+
+        return f(*args, **kwargs)
+
+    return wrapper

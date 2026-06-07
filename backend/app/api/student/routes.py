@@ -8,7 +8,7 @@ from app.models.application import Application, ApplicationStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.student import Student
 from app.models.user import UserRoleEnum
-from app.utils.decorators import role_required
+from app.utils.decorators import active_required, role_required
 
 student_api = Blueprint("student_api", __name__)
 
@@ -165,6 +165,7 @@ def get_student_profile():
 
 @student_api.route("/profile", methods=["PUT"])
 @role_required(UserRoleEnum.student)
+@active_required
 def set_student_profile():
     user_id = get_jwt_identity()
     student = Student.query.filter_by(user_id=user_id).first()
@@ -216,6 +217,7 @@ def set_student_profile():
 
 @student_api.route("/profile/resume", methods=["POST"])
 @role_required(UserRoleEnum.student)
+@active_required
 def upload_resume():
     user_id = get_jwt_identity()
     student = Student.query.filter_by(user_id=user_id).first()
@@ -262,6 +264,7 @@ def upload_resume():
 
 @student_api.route("/drives/<id>", methods=["GET"])
 @role_required(UserRoleEnum.student)
+@active_required
 def get_drive_details(id):
     drive = Drive.query.filter_by(
         drive_id=id, approval_status=DriveStatusEnum.approved
@@ -274,6 +277,7 @@ def get_drive_details(id):
 
 @student_api.route("/drives/<id>/apply", methods=["POST"])
 @role_required(UserRoleEnum.student)
+@active_required
 def student_apply(id):
     user_id = get_jwt_identity()
     student = Student.query.filter_by(user_id=user_id).first()
