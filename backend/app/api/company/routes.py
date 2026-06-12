@@ -72,6 +72,9 @@ def company_dashboard():
                 {
                     "drive_id": drive.drive_id,
                     "job_title": drive.job_title,
+                    "required_skills": drive.required_skills,
+                    "experience_required": drive.experience_required,
+                    "benefits": drive.benefits,
                     "approval_status": drive.approval_status.value,
                     "application_deadline": str(drive.application_deadline),
                     "applications": len(drive.applications),
@@ -215,17 +218,31 @@ def create_company_drives():
         "year",
         "no_openings",
         "salary",
+        "required_skills",
+        "experience_required",
+        "benefits",
     }
 
     data = request.get_json()
+    if not data:
+        error = {"error": "Missing data fields"}
+        return jsonify(error), 400
 
     for field in data:
         if field not in allowed_fields:
             return jsonify({"message": f"Invalid field: {field}"}), 400
 
-    if not data or "job_title" not in data or "application_deadline" not in data:
+    if "job_title" not in data or "application_deadline" not in data:
         error = {"error": "Missing data fields"}
         return jsonify(error), 400
+
+    for field in ("required_skills", "experience_required", "benefits"):
+        if field in data and data[field] is not None:
+            if not isinstance(data[field], str):
+                return jsonify({"error": f"{field} must be text"}), 400
+            if len(data[field]) > 2000:
+                return jsonify({"error": f"{field} is too long"}), 400
+
     try:
         application_deadline = datetime.fromisoformat(data["application_deadline"])
     except ValueError:
@@ -242,6 +259,9 @@ def create_company_drives():
             year=data.get("year"),
             no_openings=data.get("no_openings"),
             salary=data.get("salary"),
+            required_skills=data.get("required_skills"),
+            experience_required=data.get("experience_required"),
+            benefits=data.get("benefits"),
         )
         db.session.add(drive)
         db.session.commit()
@@ -299,11 +319,21 @@ def update_drive(id):
         "year",
         "no_openings",
         "salary",
+        "required_skills",
+        "experience_required",
+        "benefits",
     }
 
     for field in data:
         if field not in allowed_fields:
             return jsonify({"error": f"Field '{field}' cannot be updated"}), 400
+
+    for field in ("required_skills", "experience_required", "benefits"):
+        if field in data and data[field] is not None:
+            if not isinstance(data[field], str):
+                return jsonify({"error": f"{field} must be text"}), 400
+            if len(data[field]) > 2000:
+                return jsonify({"error": f"{field} is too long"}), 400
 
     try:
         if "application_deadline" in data:
@@ -347,6 +377,9 @@ def get_drive_application(id):
         {
             "drive_id": drive.drive_id,
             "job_title": drive.job_title,
+            "required_skills": drive.required_skills,
+            "experience_required": drive.experience_required,
+            "benefits": drive.benefits,
             "applications": [
                 application.to_dict() for application in drive.applications
             ],

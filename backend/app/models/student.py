@@ -21,6 +21,8 @@ class Student(db.Model):
     cgpa = db.Column(db.Float, nullable=True)
     year = db.Column(db.Integer, nullable=True)
     resume_path = db.Column(db.String, nullable=True)
+    skills = db.Column(db.Text, nullable=True)
+    experience = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     applications = db.relationship("Application", backref="student", lazy=True)
@@ -35,5 +37,7 @@ class Student(db.Model):
             "department": self.department,
             "cgpa": self.cgpa,
             "year": self.year,
+            "skills": self.skills,
+            "experience": self.experience,
             "created_at": str(self.created_at),
         }

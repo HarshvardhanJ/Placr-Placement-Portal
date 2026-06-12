@@ -35,6 +35,9 @@ class Drive(db.Model):
     year = db.Column(db.Integer, nullable=True)
     no_openings = db.Column(db.Integer, nullable=True)
     salary = db.Column(db.Integer, nullable=True)
+    required_skills = db.Column(db.Text, nullable=True)
+    experience_required = db.Column(db.String, nullable=True)
+    benefits = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     applications = db.relationship("Application", backref="drive", lazy=True)
@@ -49,6 +52,9 @@ class Drive(db.Model):
             "job_location": self.job_location,
             "application_deadline": str(self.application_deadline),
             "min_cgpa": self.min_cgpa,
+            "required_skills": self.required_skills,
+            "experience_required": self.experience_required,
+            "benefits": self.benefits,
             "approval_status": self.approval_status.value,
             "year": self.year,
             "no_openings": self.no_openings,

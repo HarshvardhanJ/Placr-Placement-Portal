@@ -1,4 +1,4 @@
-from flask import Blueprint, json, jsonify, request
+from flask import Blueprint, jsonify, request
 from app.models.user import UserRoleEnum
 from app.utils.decorators import role_required
 from app.models.user import User
@@ -6,6 +6,7 @@ from app.models.student import Student
 from app.models.company import Company, CompanyStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.extensions import db
+from app.models.application import Application
 
 
 admin_bp = Blueprint("admin_bp", __name__)
@@ -20,6 +21,7 @@ def admin_dashboard():
             "total_students": Student.query.count(),
             "total_companies": Company.query.count(),
             "total_drives": Drive.query.count(),
+            "total_applications": Application.query.count(),
         }
     ), 200
 
@@ -187,3 +189,24 @@ def reject_drives(id):
         return jsonify(
             {"error": f"Failed to update drive {id}", "details": str(e)}
         ), 500
+
+
+@admin_bp.route("/applications", methods=["GET"])
+@role_required(UserRoleEnum.admin)
+def admin_applications():
+    applications = Application.query.all()
+
+    return jsonify(
+        [
+            {
+                "application_id": app.application_id,
+                "student_name": app.student.name,
+                "roll_no": app.student.roll_no,
+                "company": app.drive.company.name,
+                "job_title": app.drive.job_title,
+                "status": app.status.value,
+                "application_date": str(app.application_date),
+            }
+            for app in applications
+        ]
+    ), 200

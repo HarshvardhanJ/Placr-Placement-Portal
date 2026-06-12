@@ -183,6 +183,8 @@ def set_student_profile():
         "cgpa",
         "year",
         "phone",
+        "skills",
+        "experience",
     }
 
     if not data:
@@ -200,12 +202,21 @@ def set_student_profile():
         if data["year"] not in [1, 2, 3, 4]:
             return jsonify({"error": "Year must be between 1 and 4"}), 400
 
+    for field in ("skills", "experience"):
+        if field in data and data[field] is not None:
+            if not isinstance(data[field], str):
+                return jsonify({"error": f"{field} must be text"}), 400
+            if len(data[field]) > 2000:
+                return jsonify({"error": f"{field} is too long"}), 400
+
     try:
         student.name = data.get("name", student.name)
         student.department = data.get("department", student.department)
         student.cgpa = data.get("cgpa", student.cgpa)
         student.year = data.get("year", student.year)
         student.phone_number = data.get("phone", student.phone_number)
+        student.skills = data.get("skills", student.skills)
+        student.experience = data.get("experience", student.experience)
         db.session.commit()
         return jsonify(
             {
@@ -414,6 +425,7 @@ def get_available_drives():
                 Company.name.ilike(f"%{search}%"),
                 Drive.job_title.ilike(f"%{search}%"),
                 Drive.job_description.ilike(f"%{search}%"),
+                Drive.required_skills.ilike(f"%{search}%"),
             )
         )
 

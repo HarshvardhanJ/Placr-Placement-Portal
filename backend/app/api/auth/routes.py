@@ -29,6 +29,13 @@ def login():
         error = {"error": "Wrong email or password!"}
         return jsonify(error), 401
 
+    if not user.is_active:
+        return jsonify(
+            {
+                "error": "Your account has been deactivated. Please contact the administrator."
+            }
+        ), 403
+
     token = create_access_token(identity=user.user_id)
     return jsonify(
         {"token": token, "user": {"email": user.email, "role": user.role.value}}
