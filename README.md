@@ -75,25 +75,94 @@ and supports the complete placement workflow from job posting to offer letter di
 
 ## System Architecture
 
-```text
-Vue Frontend
-      │
-      ▼
- Flask REST API
-      │
-      ▼
- SQLAlchemy ORM
-      │
-      ▼
-   SQLite
+```mermaid
+flowchart TD
 
- Redis
-      │
-      ▼
- Celery Workers
+    U[Student]
+    C[Company]
+    A[Admin]
+
+    U --> V[Vue Frontend]
+    C --> V
+    A --> V
+
+    V --> F[Flask REST API]
+
+    F --> JWT[JWT Authentication]
+    F --> ORM[SQLAlchemy ORM]
+
+    ORM --> DB[(SQLite Database)]
+
+    F --> R[(Redis)]
+    R --> CELERY[Celery Workers]
+
+    CELERY --> CSV[CSV Export Jobs]
+    CELERY --> REM[Interview Reminder Jobs]
+    CELERY --> REP[Placement Report Jobs]
 ```
+## Database ER Diagram
 
----
+```mermaid
+erDiagram
+
+    USER ||--o| STUDENT : has
+    USER ||--o| COMPANY : has
+
+    COMPANY ||--o{ DRIVE : creates
+
+    STUDENT ||--o{ APPLICATION : submits
+    DRIVE ||--o{ APPLICATION : receives
+
+    APPLICATION ||--o| PLACEMENT : generates
+
+    USER {
+        string user_id PK
+        string email
+        string password
+        string role
+        bool is_active
+    }
+
+    STUDENT {
+        string student_id PK
+        string user_id FK
+        string name
+        string roll_no
+        string department
+        float cgpa
+        int year
+    }
+
+    COMPANY {
+        string company_id PK
+        string user_id FK
+        string name
+        string industry
+        string location
+    }
+
+    DRIVE {
+        string drive_id PK
+        string company_id FK
+        string job_title
+        string salary
+        string approval_status
+    }
+
+    APPLICATION {
+        string application_id PK
+        string student_id FK
+        string drive_id FK
+        string status
+    }
+
+    PLACEMENT {
+        string placement_id PK
+        string application_id FK
+        int salary
+        datetime joining_date
+    }
+```
 
 ## Placement Workflow
 
