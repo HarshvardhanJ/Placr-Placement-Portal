@@ -166,32 +166,40 @@ erDiagram
 
 ## Placement Workflow
 
-```text
-Student Registration
-        │
-        ▼
- Profile Completion
-        │
-        ▼
- Resume Upload
-        │
-        ▼
- Apply to Placement Drive
-        │
-        ▼
- Company Review
-        │
-        ▼
- Interview Scheduling
-        │
-        ▼
- Candidate Selection
-        │
-        ▼
- Placement Record Creation
-        │
-        ▼
- Offer Letter Distribution
+```mermaid
+flowchart TD
+
+    SR[Student Registration]
+    SP[Complete Profile]
+    RU[Upload Resume]
+
+    JD[Browse Placement Drives]
+    AP[Apply to Drive]
+
+    RV[Company Reviews Application]
+    SL[Shortlist Candidate]
+
+    INT[Schedule Interview]
+
+    SEL[Select Candidate]
+
+    PLC[Create Placement Record]
+
+    OFF[Upload Offer Letter]
+
+    DL[Student Downloads Offer Letter]
+
+    SR --> SP
+    SP --> RU
+    RU --> JD
+    JD --> AP
+    AP --> RV
+    RV --> SL
+    SL --> INT
+    INT --> SEL
+    SEL --> PLC
+    PLC --> OFF
+    OFF --> DL
 ```
 
 ---
