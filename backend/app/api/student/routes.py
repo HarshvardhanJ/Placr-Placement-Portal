@@ -182,7 +182,7 @@ def set_student_profile():
         "department",
         "cgpa",
         "year",
-        "phone",
+        "phone_number",
         "skills",
         "experience",
     }
@@ -214,7 +214,7 @@ def set_student_profile():
         student.department = data.get("department", student.department)
         student.cgpa = data.get("cgpa", student.cgpa)
         student.year = data.get("year", student.year)
-        student.phone_number = data.get("phone", student.phone_number)
+        student.phone_number = data.get("phone_number", student.phone_number)
         student.skills = data.get("skills", student.skills)
         student.experience = data.get("experience", student.experience)
         db.session.commit()
