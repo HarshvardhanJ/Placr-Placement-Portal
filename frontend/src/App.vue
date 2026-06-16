@@ -1,7 +1,7 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import LoginView from "./views/auth/LoginView.vue";
 </script>
 
 <template>
-  <HelloWorld />
+  <router-view />
 </template>

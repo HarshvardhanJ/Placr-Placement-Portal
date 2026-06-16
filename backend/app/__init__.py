@@ -21,7 +21,11 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     register_commands(app)
-    CORS(app)
+    CORS(
+        app,
+        origins=["http://localhost:5173"],
+        supports_credentials=True,
+    )
     jwt.init_app(app)
     # Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
