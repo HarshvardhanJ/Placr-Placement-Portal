@@ -4,11 +4,7 @@
   >
     <div class="container landing-nav-container d-flex align-items-center">
       <RouterLink to="/" class="navbar-brand d-flex align-items-center gap-3">
-        <img
-          :src="placrLogo"
-          alt="PLACR"
-          class="brand-logo rounded-3"
-        />
+        <img :src="placrLogo" alt="PLACR" class="brand-logo rounded-3" />
         <div class="d-flex flex-column lh-1">
           <span class="fw-bold text-primary">PLACR</span>
           <small class="text-secondary">Placement Portal</small>
@@ -49,7 +45,7 @@
               Sign In
             </RouterLink>
 
-            <RouterLink to="/register/student" class="btn btn-primary">
+            <RouterLink to="/register" class="btn btn-primary">
               Get Started
             </RouterLink>
           </div>

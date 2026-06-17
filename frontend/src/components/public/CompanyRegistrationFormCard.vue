@@ -28,42 +28,99 @@
         <form @submit.prevent="companySignup">
           <div class="mb-2">
             <label class="form-label">Company Name</label>
-            <input
-              v-model="compnayName"
-              type="text"
-              class="form-control"
-              placeholder="Some Corp"
-            />
+            <div class="input-icon">
+              <span class="input-icon-addon">
+                <img
+                  :src="companyIcon"
+                  alt="companyName"
+                  width="18"
+                  height="18"
+                />
+              </span>
+              <input
+                v-model="companyName"
+                type="text"
+                class="form-control"
+                placeholder="Some Corp"
+              />
+            </div>
           </div>
           <div class="mb-2">
             <label class="form-label">Company Email</label>
-            <input
-              v-model="email"
-              type="email"
-              class="form-control"
-              placeholder="hr@company.com"
-            />
+            <div class="input-icon">
+              <span class="input-icon-addon">
+                <img :src="mailIcon" alt="email" width="18" height="18" />
+              </span>
+
+              <input
+                v-model="email"
+                type="email"
+                class="form-control"
+                placeholder="hr@company.com"
+              />
+            </div>
           </div>
 
           <div class="row mb-2">
             <div class="col-md-6 mb-3">
               <label class="form-label">Password</label>
-              <input
-                v-model="password"
-                type="password"
-                class="form-control"
-                placeholder="••••••••"
-              />
+              <div class="input-icon">
+                <span class="input-icon-addon">
+                  <img :src="lockIcon" alt="password" width="18" height="18" />
+                </span>
+                <input
+                  v-model="password"
+                  type="password"
+                  class="form-control"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div class="mt-2 small">
+                <div :class="hasMinLength ? 'text-success' : 'text-secondary'">
+                  ✓ At least 8 characters
+                </div>
+
+                <div :class="hasUpperCase ? 'text-success' : 'text-secondary'">
+                  ✓ One uppercase letter
+                </div>
+
+                <div :class="hasLowerCase ? 'text-success' : 'text-secondary'">
+                  ✓ One lowercase letter
+                </div>
+
+                <div :class="hasNumber ? 'text-success' : 'text-secondary'">
+                  ✓ One number
+                </div>
+              </div>
             </div>
 
             <div class="col-md-6 mb-3">
               <label class="form-label">Confirm Password</label>
-              <input
-                v-model="confirmPassword"
-                type="password"
-                class="form-control"
-                placeholder="••••••••"
-              />
+              <div class="input-icon">
+                <span class="input-icon-addon">
+                  <img
+                    :src="lockCheckIcon"
+                    alt="password"
+                    width="18"
+                    height="18"
+                  />
+                </span>
+                <input
+                  v-model="confirmPassword"
+                  type="password"
+                  class="form-control"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div
+                v-if="confirmPassword"
+                class="small mt-2"
+                :class="passwordsMatch ? 'text-success' : 'text-danger'"
+              >
+                {{
+                  passwordsMatch ? "Passwords match" : "Passwords do not match"
+                }}
+              </div>
             </div>
           </div>
 
@@ -71,24 +128,36 @@
             {{ error }}
           </div>
 
-          <button type="submit" class="btn btn-primary w-100">
+          <button
+            type="submit"
+            class="btn btn-primary w-100"
+            :disabled="!passwordValid || !passwordsMatch"
+          >
             Register Company
           </button>
         </form>
       </div>
     </div>
     <div class="my-3">
-      <RouterLink to="/login" class="btn btn-link"> Sign In </RouterLink>
+      <span
+        class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1 hover-primary transition-colors"
+        >Already have an account?
+        <RouterLink to="/login" class="btn btn-link"> Sign In </RouterLink>
+      </span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import api from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
-import infoIcon from "@/assets/info-circle.svg";
+import infoIcon from "@/assets/icons/info-circle.svg";
+import lockIcon from "@/assets/icons/lock.svg";
+import lockCheckIcon from "@/assets/icons/lock-check.svg";
+import mailIcon from "@/assets/icons/mail.svg";
+import companyIcon from "@/assets/icons/building.svg";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -98,6 +167,25 @@ const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const error = ref("");
+
+const hasMinLength = computed(() => password.value.length >= 8);
+const hasUpperCase = computed(() => /[A-Z]/.test(password.value));
+const hasLowerCase = computed(() => /[a-z]/.test(password.value));
+const hasNumber = computed(() => /\d/.test(password.value));
+
+const passwordsMatch = computed(
+  () =>
+    confirmPassword.value.length > 0 &&
+    password.value === confirmPassword.value,
+);
+
+const passwordValid = computed(
+  () =>
+    hasMinLength.value &&
+    hasUpperCase.value &&
+    hasLowerCase.value &&
+    hasNumber.value,
+);
 
 async function companySignup() {
   error.value = "";
@@ -116,7 +204,7 @@ async function companySignup() {
     router.push("/login");
   } catch (err) {
     error.value =
-      err?.response?.data?.error || `Sign up failed. Please try again. ${err}`;
+      err?.response?.data?.error || `Sign up failed. Please try again.`;
   }
 }
 </script>

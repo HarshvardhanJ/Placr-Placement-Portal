@@ -4,7 +4,7 @@ from app.extensions import bcrypt, db
 from app.models.company import Company
 from app.models.student import Student
 from app.models.user import User, UserRoleEnum
-
+import re
 
 auth_bp = Blueprint("auth_bp", __name__)
 
@@ -68,6 +68,14 @@ def register_student():
         error = {"error": "User already exists"}
         return jsonify(error), 409
 
+    if not validate_password(password):
+        return {
+            "error": (
+                "Password must be at least 8 characters long "
+                "and contain uppercase, lowercase, and numeric characters."
+            )
+        }, 400
+
     if password != repeat_password:
         return jsonify({"error": "Password do not match"}), 400
 
@@ -113,6 +121,14 @@ def register_company():
     if User.query.filter_by(email=email).first():
         error = {"error": "User already exists"}
         return jsonify(error), 409
+
+    if not validate_password(password):
+        return {
+            "error": (
+                "Password must be at least 8 characters long "
+                "and contain uppercase, lowercase, and numeric characters."
+            )
+        }, 400
 
     if password != repeat_password:
         return jsonify({"error": "Password do not match"}), 400
@@ -165,3 +181,12 @@ def me():
                 "approval_status": company.approval_status.value,
             }
         ), 200
+
+
+def validate_password(password):
+    return (
+        len(password) >= 8
+        and re.search(r"[A-Z]", password)
+        and re.search(r"[a-z]", password)
+        and re.search(r"\d", password)
+    )
