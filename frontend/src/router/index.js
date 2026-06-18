@@ -5,6 +5,9 @@ import StudentRegisterView from "@/views/auth/StudentRegisterView.vue";
 import CompanyRegisterView from "@/views/auth/CompanyRegisterView.vue";
 import LandingView from "@/views/auth/LandingView.vue";
 import RegisterView from "@/views/auth/RegisterView.vue";
+import AdminDashboardView from "@/views/admin/DashboardView.vue";
+// import CompanyDashboardView from "@/views/company/DashboardView.vue";
+// import StudentDashboardView from "@/views/student/DashboardView.vue";
 
 const routes = [
   {
@@ -32,6 +35,21 @@ const routes = [
     name: "company-register",
     component: CompanyRegisterView,
   },
+  {
+    path: "/admin",
+    name: "admin-dashboard",
+    component: AdminDashboardView,
+  },
+  // {
+  //   path: "/company",
+  //   name: "company-dashboard",
+  //   component: CompanyDashboardView,
+  // },
+  // {
+  //   path: "/student",
+  //   name: "student-dashboard",
+  //   component: StudentDashboardView,
+  // },
 ];
 
 const router = createRouter({
