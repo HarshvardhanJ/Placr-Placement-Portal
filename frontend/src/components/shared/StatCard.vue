@@ -16,5 +16,9 @@
 defineProps({
   title: String,
   value: [String, Number],
+  subtitle: String,
+  trend: String,
+  trendType: String,
+  icon: String,
 });
 </script>

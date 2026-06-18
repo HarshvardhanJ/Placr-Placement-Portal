@@ -19,10 +19,92 @@
         <StatCard title="Applications" :value="7856" />
       </div>
     </div>
+    <div class="row mt-4">
+      <div class="col-lg-8">
+        <!-- Main Widget -->
+        <ActionList title="Pending Approvals" :items="pending" />
+      </div>
+
+      <div class="col-lg-4">
+        <RecentActivity title="Recent Activity" :activities="activities" />
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-12">
+        <DataTable :headers="headers" :rows="drives" />
+      </div>
+    </div>
   </DashboardLayout>
 </template>
 
 <script setup>
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
-import StatCard from "@/components/dashboard/StatCard.vue";
+import StatCard from "@/components/shared/StatCard.vue";
+import DataTable from "@/components/shared/DataTable.vue";
+import RecentActivity from "@/components/shared/RecentActivity.vue";
+import ActionList from "@/components/shared/ActionsList.vue";
+
+const activities = [
+  {
+    message: "Google India approved",
+    time: "10 mins ago",
+    color: "success",
+  },
+  {
+    message: "Amazon drive created",
+    time: "1 hour ago",
+    color: "primary",
+  },
+];
+
+const pending = [
+  {
+    title: "Google India",
+    subtitle: "Company",
+  },
+  {
+    title: "Amazon Backend Intern",
+    subtitle: "Drive",
+  },
+];
+
+const headers = [
+  {
+    key: "company",
+    label: "Company",
+  },
+  {
+    key: "role",
+    label: "Role",
+  },
+  {
+    key: "deadline",
+    label: "Deadline",
+  },
+  {
+    key: "applicants",
+    label: "Applicants",
+  },
+  {
+    key: "status",
+    label: "Status",
+  },
+];
+
+const drives = [
+  {
+    company: "Google",
+    role: "SDE Intern",
+    deadline: "20 Jun",
+    applicants: 120,
+    status: "Open",
+  },
+  {
+    company: "Amazon",
+    role: "Backend Intern",
+    deadline: "25 Jun",
+    applicants: 85,
+    status: "Pending",
+  },
+];
 </script>
