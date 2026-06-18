@@ -3,7 +3,7 @@
     <div class="text-center mb-5">
       <h1 class="display-4 fw-bold">Choose Your Account Type</h1>
 
-      <p class="lead text-secondary">Select how you'd like to use PLACR</p>
+      <p class="lead text-secondary">Select your role to register as</p>
     </div>
 
     <div class="row g-5 align-items-stretch">
@@ -34,6 +34,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import RoleCard from "@/components/public/RoleCard.vue";
+
+import studentIllustration from "@/assets/icons/school.svg";
+import companyIllustration from "@/assets/icons/building.svg";
 </script>
