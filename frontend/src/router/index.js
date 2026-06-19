@@ -7,6 +7,7 @@ import LandingView from "@/views/auth/LandingView.vue";
 import RegisterView from "@/views/auth/RegisterView.vue";
 import AdminDashboardView from "@/views/admin/DashboardView.vue";
 import CompaniesView from "@/views/admin/CompaniesView.vue";
+import StudentsView from "@/views/admin/StudentsView.vue";
 // import CompanyDashboardView from "@/views/company/DashboardView.vue";
 // import StudentDashboardView from "@/views/student/DashboardView.vue";
 
@@ -45,7 +46,13 @@ const routes = [
     path: "/admin/companies",
     name: "admin-company-dashboard",
     component: CompaniesView,
-  }, // {
+  },
+  {
+    path: "/admin/students",
+    name: "admin-student-dashboard",
+    component: StudentsView,
+  },
+  // {
   //   path: "/company",
   //   name: "company-dashboard",
   //   component: CompanyDashboardView,

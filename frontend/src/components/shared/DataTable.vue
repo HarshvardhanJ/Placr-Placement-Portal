@@ -17,7 +17,9 @@
         <tbody>
           <tr v-for="(row, index) in rows" :key="index">
             <td v-for="header in headers" :key="header.key">
-              {{ row[header.key] }}
+              <slot :name="header.key" :row="row">
+                {{ row[header.key] }}
+              </slot>
             </td>
           </tr>
         </tbody>

@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import "./style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap";
 import "@tabler/core/dist/css/tabler.min.css";
 import App from "./App.vue";
 import router from "./router";
