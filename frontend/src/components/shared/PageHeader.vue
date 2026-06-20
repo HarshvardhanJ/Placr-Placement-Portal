@@ -10,8 +10,8 @@
       </p>
     </div>
 
-    <div class="d-flex gap-2">
-      <slot name="actions"></slot>
+    <div v-if="$slots.actions" class="page-header-actions">
+      <slot name="actions" />
     </div>
   </div>
 </template>
@@ -32,3 +32,51 @@ defineProps({
   },
 });
 </script>
+
+<style scoped>
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-header-text {
+  min-width: 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  margin: 0.35rem 0 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 991.98px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header-actions {
+    justify-content: flex-start;
+  }
+}
+</style>

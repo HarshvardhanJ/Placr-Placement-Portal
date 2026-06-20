@@ -1,8 +1,8 @@
 <template>
   <DashboardLayout>
     <PageHeader
-      title="Students"
-      subtitle="Manage student accounts, status, and records."
+      title="Drives"
+      subtitle="Manage placement drives, approvals, and status."
     >
       <template #actions>
         <button
@@ -65,7 +65,7 @@
                 v-model="searchQuery"
                 type="text"
                 class="form-control border-0 shadow-none"
-                placeholder="Search by name, roll no, email, or contact..."
+                placeholder="Search by company, role, or industry..."
               />
             </div>
           </div>
@@ -73,9 +73,10 @@
           <div class="col-lg-3">
             <select v-model="statusFilter" class="form-select">
               <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="blacklisted">Blacklisted</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="closed">Closed</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
 
@@ -92,7 +93,7 @@
       </div>
     </div>
 
-    <DataTable title="Students" :headers="headers" :rows="filteredStudents">
+    <DataTable title="Drives" :headers="headers" :rows="filteredDrives">
       <template #status="{ row }">
         <span class="badge rounded-pill" :class="statusBadgeClass(row.status)">
           {{ row.status }}
@@ -103,104 +104,94 @@
         <div class="d-flex flex-wrap gap-2">
           <button
             class="btn btn-sm btn-outline-primary"
-            @click="viewStudent(row)"
+            @click="viewDrive(row)"
           >
             View
           </button>
 
           <button
-            v-if="row.status === 'Active'"
+            v-if="row.status === 'Pending'"
+            class="btn btn-sm btn-outline-success"
+            @click="approveDrive(row)"
+          >
+            Approve
+          </button>
+
+          <button
+            v-if="row.status === 'Approved'"
             class="btn btn-sm btn-outline-warning"
-            @click="confirmDeactivate(row)"
+            @click="confirmClose(row)"
           >
-            Deactivate
+            Close
           </button>
 
           <button
-            v-if="row.status === 'Inactive'"
-            class="btn btn-sm btn-outline-success"
-            @click="activateStudent(row)"
-          >
-            Activate
-          </button>
-
-          <button
-            v-if="row.status === 'Blacklisted'"
-            class="btn btn-sm btn-outline-success"
-            @click="restoreStudent(row)"
-          >
-            Restore
-          </button>
-
-          <button
-            v-if="row.status !== 'Blacklisted'"
+            v-if="row.status !== 'Rejected'"
             class="btn btn-sm btn-outline-danger"
-            @click="confirmBlacklist(row)"
+            @click="confirmReject(row)"
           >
-            Blacklist
+            Reject
           </button>
         </div>
       </template>
     </DataTable>
 
-    <div v-if="showStudentModal" class="modal d-block" tabindex="-1">
+    <div v-if="showDriveModal" class="modal d-block" tabindex="-1">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
           <div class="modal-header">
             <div>
-              <h5 class="modal-title mb-1">Student Details</h5>
-              <small class="text-secondary"
-                >Profile and account information</small
-              >
+              <h5 class="modal-title mb-1">Drive Details</h5>
+              <small class="text-secondary">Placement drive overview</small>
             </div>
             <button
               type="button"
               class="btn-close"
-              @click="showStudentModal = false"
+              @click="showDriveModal = false"
             ></button>
           </div>
 
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="text-secondary">Name</label>
-                <div class="fw-medium">{{ selectedStudent?.name }}</div>
+                <label class="text-secondary">Company</label>
+                <div class="fw-medium">{{ selectedDrive?.company }}</div>
               </div>
 
               <div class="col-md-6">
-                <label class="text-secondary">Roll Number</label>
-                <div class="fw-medium">{{ selectedStudent?.roll_no }}</div>
+                <label class="text-secondary">Industry</label>
+                <div class="fw-medium">{{ selectedDrive?.industry }}</div>
               </div>
 
               <div class="col-md-6">
-                <label class="text-secondary">Department</label>
-                <div class="fw-medium">{{ selectedStudent?.department }}</div>
+                <label class="text-secondary">Role</label>
+                <div class="fw-medium">{{ selectedDrive?.role }}</div>
               </div>
 
               <div class="col-md-6">
-                <label class="text-secondary">CGPA</label>
-                <div class="fw-medium">{{ selectedStudent?.cgpa }}</div>
+                <label class="text-secondary">Deadline</label>
+                <div class="fw-medium">{{ selectedDrive?.deadline }}</div>
               </div>
 
               <div class="col-md-6">
-                <label class="text-secondary">Email</label>
-                <div class="fw-medium">{{ selectedStudent?.email }}</div>
-              </div>
-
-              <div class="col-md-6">
-                <label class="text-secondary">Contact</label>
-                <div class="fw-medium">{{ selectedStudent?.contact }}</div>
+                <label class="text-secondary">Applicants</label>
+                <div class="fw-medium">{{ selectedDrive?.applicants }}</div>
               </div>
 
               <div class="col-md-6">
                 <label class="text-secondary">Status</label>
-                <div class="fw-medium">{{ selectedStudent?.status }}</div>
+                <div class="fw-medium">{{ selectedDrive?.status }}</div>
+              </div>
+
+              <div class="col-12">
+                <label class="text-secondary">Description</label>
+                <div class="fw-medium">{{ selectedDrive?.description }}</div>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-secondary" @click="showStudentModal = false">
+            <button class="btn btn-secondary" @click="showDriveModal = false">
               Close
             </button>
           </div>
@@ -208,7 +199,7 @@
       </div>
     </div>
 
-    <div v-if="showStudentModal" class="modal-backdrop fade show"></div>
+    <div v-if="showDriveModal" class="modal-backdrop fade show"></div>
   </DashboardLayout>
 </template>
 
@@ -223,91 +214,89 @@ import StatCard from "@/components/shared/StatCard.vue";
 const searchQuery = ref("");
 const statusFilter = ref("");
 
-const selectedStudent = ref(null);
-const showStudentModal = ref(false);
+const selectedDrive = ref(null);
+const showDriveModal = ref(false);
 
-const students = ref([
+const drives = ref([
   {
     id: 1,
-    name: "Rahul Sharma",
-    roll_no: "24CS101",
-    department: "CSE",
-    cgpa: 8.9,
-    email: "rahul@example.com",
-    contact: "+91 98765 43210",
-    status: "Active",
+    company: "Google",
+    industry: "Technology",
+    role: "SDE Intern",
+    deadline: "2026-07-10",
+    applicants: 125,
+    status: "Approved",
+    description: "Campus hiring drive for summer internship roles.",
   },
   {
     id: 2,
-    name: "Priya Nair",
-    roll_no: "24EC205",
-    department: "ECE",
-    cgpa: 8.4,
-    email: "priya@example.com",
-    contact: "+91 98765 43211",
-    status: "Inactive",
+    company: "Amazon",
+    industry: "Technology",
+    role: "Backend Intern",
+    deadline: "2026-07-15",
+    applicants: 87,
+    status: "Pending",
+    description: "Hiring for backend-focused internship positions.",
   },
   {
     id: 3,
-    name: "Aman Verma",
-    roll_no: "24ME112",
-    department: "ME",
-    cgpa: 7.9,
-    email: "aman@example.com",
-    contact: "+91 98765 43212",
-    status: "Blacklisted",
+    company: "NVIDIA",
+    industry: "Semiconductors",
+    role: "ML Intern",
+    deadline: "2026-07-05",
+    applicants: 42,
+    status: "Closed",
+    description: "Closed drive for machine learning internship roles.",
   },
   {
     id: 4,
-    name: "Sneha Iyer",
-    roll_no: "24CS143",
-    department: "CSE",
-    cgpa: 9.1,
-    email: "sneha@example.com",
-    contact: "+91 98765 43213",
-    status: "Active",
+    company: "Adobe",
+    industry: "Software",
+    role: "Product Intern",
+    deadline: "2026-07-20",
+    applicants: 65,
+    status: "Rejected",
+    description: "Rejected due to incomplete eligibility details.",
   },
 ]);
 
 const headers = [
-  { key: "name", label: "Name" },
-  { key: "roll_no", label: "Roll No" },
-  { key: "department", label: "Department" },
-  { key: "cgpa", label: "CGPA" },
+  { key: "company", label: "Company" },
+  { key: "industry", label: "Industry" },
+  { key: "role", label: "Role" },
+  { key: "deadline", label: "Deadline" },
+  { key: "applicants", label: "Applicants" },
   { key: "status", label: "Status" },
   { key: "actions", label: "Actions" },
 ];
 
 const stats = computed(() => [
-  { title: "Total Students", value: students.value.length },
+  { title: "Total Drives", value: drives.value.length },
   {
-    title: "Active",
-    value: students.value.filter((s) => s.status === "Active").length,
+    title: "Approved",
+    value: drives.value.filter((d) => d.status === "Approved").length,
   },
   {
-    title: "Inactive",
-    value: students.value.filter((s) => s.status === "Inactive").length,
+    title: "Pending",
+    value: drives.value.filter((d) => d.status === "Pending").length,
   },
   {
-    title: "Blacklisted",
-    value: students.value.filter((s) => s.status === "Blacklisted").length,
+    title: "Closed",
+    value: drives.value.filter((d) => d.status === "Closed").length,
   },
 ]);
 
-const filteredStudents = computed(() => {
-  return students.value.filter((student) => {
+const filteredDrives = computed(() => {
+  return drives.value.filter((drive) => {
     const query = searchQuery.value.toLowerCase();
 
     const matchesSearch =
-      student.name.toLowerCase().includes(query) ||
-      student.roll_no.toLowerCase().includes(query) ||
-      student.department.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query) ||
-      student.contact.toLowerCase().includes(query);
+      drive.company.toLowerCase().includes(query) ||
+      drive.role.toLowerCase().includes(query) ||
+      drive.industry.toLowerCase().includes(query);
 
     const matchesStatus =
-      !statusFilter.value ||
-      student.status.toLowerCase() === statusFilter.value;
+      !statusFilter.value || drive.status.toLowerCase() === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -320,48 +309,46 @@ const clearFilters = () => {
 
 const statusBadgeClass = (status) => {
   switch (status) {
-    case "Active":
+    case "Approved":
       return "text-bg-success";
-    case "Inactive":
+    case "Pending":
       return "text-bg-warning";
-    case "Blacklisted":
+    case "Closed":
+      return "text-bg-secondary";
+    case "Rejected":
       return "text-bg-danger";
     default:
       return "text-bg-light";
   }
 };
 
-const viewStudent = (student) => {
-  selectedStudent.value = student;
-  showStudentModal.value = true;
+const viewDrive = (drive) => {
+  selectedDrive.value = drive;
+  showDriveModal.value = true;
 };
 
-const deactivateStudent = (student) => {
-  student.status = "Inactive";
+const approveDrive = (drive) => {
+  drive.status = "Approved";
 };
 
-const confirmDeactivate = (student) => {
-  if (window.confirm(`Deactivate ${student.name}?`)) {
-    deactivateStudent(student);
+const closeDrive = (drive) => {
+  drive.status = "Closed";
+};
+
+const confirmClose = (drive) => {
+  if (window.confirm(`Close ${drive.company} - ${drive.role}?`)) {
+    closeDrive(drive);
   }
 };
 
-const activateStudent = (student) => {
-  student.status = "Active";
+const rejectDrive = (drive) => {
+  drives.value = drives.value.filter((d) => d.id !== drive.id);
 };
 
-const blacklistStudent = (student) => {
-  student.status = "Blacklisted";
-};
-
-const confirmBlacklist = (student) => {
-  if (window.confirm(`Blacklist ${student.name}?`)) {
-    blacklistStudent(student);
+const confirmReject = (drive) => {
+  if (window.confirm(`Reject ${drive.company} - ${drive.role}?`)) {
+    rejectDrive(drive);
   }
-};
-
-const restoreStudent = (student) => {
-  student.status = "Active";
 };
 </script>
 

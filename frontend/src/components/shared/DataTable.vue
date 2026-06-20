@@ -1,11 +1,11 @@
 <template>
   <div class="card shadow-sm">
-    <div class="card-header">
-      <h3 class="card-title">Upcoming Drives</h3>
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">{{ title }}</h3>
     </div>
 
     <div class="table-responsive">
-      <table class="table card-table table-vcenter">
+      <table class="table table-vcenter card-table table-hover">
         <thead>
           <tr>
             <th v-for="header in headers" :key="header.key">
@@ -30,7 +30,23 @@
 
 <script setup>
 defineProps({
+  title: String,
   headers: Array,
   rows: Array,
 });
 </script>
+
+<style scoped>
+.table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  background: #f8fafc;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.table tbody td {
+  vertical-align: middle;
+}
+</style>
