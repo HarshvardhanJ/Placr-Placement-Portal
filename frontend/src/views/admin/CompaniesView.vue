@@ -75,7 +75,6 @@
               <option value="">All Statuses</option>
               <option value="approved">Approved</option>
               <option value="pending">Pending</option>
-              <option value="inactive">Inactive</option>
               <option value="blacklisted">Blacklisted</option>
             </select>
           </div>
@@ -118,30 +117,6 @@
           </button>
 
           <button
-            v-if="row.status === 'Approved'"
-            class="btn btn-sm btn-outline-warning"
-            @click="confirmDeactivate(row)"
-          >
-            Deactivate
-          </button>
-
-          <button
-            v-if="row.status === 'Inactive'"
-            class="btn btn-sm btn-outline-success"
-            @click="activateCompany(row)"
-          >
-            Activate
-          </button>
-
-          <button
-            v-if="row.status === 'Blacklisted'"
-            class="btn btn-sm btn-outline-success"
-            @click="restoreCompany(row)"
-          >
-            Restore
-          </button>
-
-          <button
             v-if="row.status === 'Pending'"
             class="btn btn-sm btn-outline-danger"
             @click="confirmReject(row)"
@@ -169,50 +144,65 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
 import DataTable from "@/components/shared/DataTable.vue";
 import CompanyDetailsModal from "@/components/admin/CompanyDetailsModal.vue";
 import StatCard from "@/components/shared/StatCard.vue";
+import api from "@/services/api";
 
 const searchQuery = ref("");
 const statusFilter = ref("");
 
 const selectedCompany = ref(null);
 const showCompanyModal = ref(false);
+const loading = ref(false);
 
-const companies = ref([
-  {
-    id: 1,
-    name: "Google",
-    industry: "Technology",
-    status: "Approved",
-    drives: 5,
-  },
-  {
-    id: 2,
-    name: "Amazon",
-    industry: "Technology",
-    status: "Pending",
-    drives: 2,
-  },
-  {
-    id: 3,
-    name: "NVIDIA",
-    industry: "Semiconductors",
-    status: "Blacklisted",
-    drives: 4,
-  },
-  {
-    id: 4,
-    name: "Adobe",
-    industry: "Software",
-    status: "Inactive",
-    drives: 1,
-  },
-]);
+const companies = ref([]);
+
+watch(searchQuery, async (value) => {
+  try {
+    const response = await api.get("/admin/companies", {
+      params: {
+        search: value,
+      },
+    });
+
+    companies.value = response.data.map((company) => ({
+      ...company,
+      status: getCompanyStatus(company),
+    }));
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+const loadCompanies = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/companies");
+
+    companies.value = response.data.map((company) => ({
+      ...company,
+      status: getCompanyStatus(company),
+    }));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const getCompanyStatus = (company) => {
+  if (!company.is_active) return "Blacklisted";
+
+  if (company.approval_status === "approved") return "Approved";
+
+  return "Pending";
+};
 
 const headers = [
   { key: "name", label: "Company" },
@@ -223,18 +213,17 @@ const headers = [
 ];
 
 const stats = computed(() => [
-  { title: "Total Companies", value: companies.value.length },
   {
-    title: "Pending Approval",
+    title: "Companies",
+    value: companies.value.length,
+  },
+  {
+    title: "Pending",
     value: companies.value.filter((c) => c.status === "Pending").length,
   },
   {
     title: "Approved",
     value: companies.value.filter((c) => c.status === "Approved").length,
-  },
-  {
-    title: "Blacklisted",
-    value: companies.value.filter((c) => c.status === "Blacklisted").length,
   },
 ]);
 
@@ -265,8 +254,6 @@ const statusBadgeClass = (status) => {
       return "text-bg-success";
     case "Pending":
       return "text-bg-warning";
-    case "Inactive":
-      return "text-bg-secondary";
     case "Blacklisted":
       return "text-bg-danger";
     default:
@@ -279,12 +266,22 @@ const viewCompany = (company) => {
   showCompanyModal.value = true;
 };
 
-const approveCompany = (company) => {
-  company.status = "Approved";
+const approveCompany = async (company) => {
+  try {
+    await api.put(`/admin/companies/${company.company_id}/approve`);
+    company.status = "Approved";
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-const rejectCompany = (company) => {
-  companies.value = companies.value.filter((c) => c.id !== company.id);
+const rejectCompany = async (company) => {
+  try {
+    await api.put(`/admin/companies/${company.company_id}/reject`);
+    companies.value = companies.value.filter((c) => c.id !== company.id);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const confirmReject = (company) => {
@@ -293,33 +290,28 @@ const confirmReject = (company) => {
   }
 };
 
-const deactivateCompany = (company) => {
-  company.status = "Inactive";
-};
-
-const confirmDeactivate = (company) => {
-  if (window.confirm(`Deactivate ${company.name}?`)) {
-    deactivateCompany(company);
-  }
-};
-
 const activateCompany = (company) => {
   company.status = "Approved";
 };
 
-const blacklistCompany = (company) => {
-  company.status = "Blacklisted";
+const blacklistCompany = async (company) => {
+  try {
+    await api.put(`/admin/companies/${company.company_id}/blacklist`);
+    company.status = "Blacklisted";
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const confirmBlacklist = (company) => {
-  if (window.confirm(`Blacklist ${company.name}?`)) {
+  if (window.confirm(`Blacklist ${company.name}? YOU CAN'T UNDO THIS`)) {
     blacklistCompany(company);
   }
 };
 
-const restoreCompany = (company) => {
-  company.status = "Approved";
-};
+onMounted(() => {
+  loadCompanies();
+});
 </script>
 
 <style scoped>

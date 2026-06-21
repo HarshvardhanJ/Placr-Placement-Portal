@@ -7,27 +7,30 @@
     </div>
 
     <div class="card-body">
-      <div
-        v-for="activity in activities"
-        :key="activity.message"
-        class="d-flex gap-3 mb-3"
-      >
+      <div v-if="activities.length">
         <div
-          class="rounded-circle flex-shrink-0"
-          :class="`bg-${activity.color}`"
-          style="width: 10px; height: 10px; margin-top: 8px"
-        />
+          v-for="activity in activities"
+          :key="activity.message"
+          class="d-flex gap-3 mb-3"
+        >
+          <div
+            class="rounded-circle flex-shrink-0"
+            :class="`bg-${activity.color}`"
+            style="width: 10px; height: 10px; margin-top: 8px"
+          />
 
-        <div>
-          <div class="fw-medium">
-            {{ activity.message }}
+          <div>
+            <div class="fw-medium">
+              {{ activity.message }}
+            </div>
+
+            <small class="text-secondary">
+              {{ activity.time }}
+            </small>
           </div>
-
-          <small class="text-secondary">
-            {{ activity.time }}
-          </small>
         </div>
       </div>
+      <div v-else class="empty-state">No recent activity</div>
     </div>
   </div>
 </template>
@@ -45,3 +48,12 @@ defineProps({
   },
 });
 </script>
+
+<style scoped>
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+</style>

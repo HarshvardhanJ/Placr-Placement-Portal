@@ -118,19 +118,19 @@
           </button>
 
           <button
+            v-if="row.status === 'Pending'"
+            class="btn btn-sm btn-outline-danger"
+            @click="confirmReject(row)"
+          >
+            Reject
+          </button>
+
+          <button
             v-if="row.status === 'Approved'"
             class="btn btn-sm btn-outline-warning"
             @click="confirmClose(row)"
           >
             Close
-          </button>
-
-          <button
-            v-if="row.status !== 'Rejected'"
-            class="btn btn-sm btn-outline-danger"
-            @click="confirmReject(row)"
-          >
-            Reject
           </button>
         </div>
       </template>
@@ -204,8 +204,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-
+import { ref, computed, onMounted } from "vue";
+import api from "@/services/api";
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
 import DataTable from "@/components/shared/DataTable.vue";
@@ -216,53 +216,42 @@ const statusFilter = ref("");
 
 const selectedDrive = ref(null);
 const showDriveModal = ref(false);
+const loading = ref(false);
+const drives = ref([]);
 
-const drives = ref([
-  {
-    id: 1,
-    company: "Google",
-    industry: "Technology",
-    role: "SDE Intern",
-    deadline: "2026-07-10",
-    applicants: 125,
-    status: "Approved",
-    description: "Campus hiring drive for summer internship roles.",
-  },
-  {
-    id: 2,
-    company: "Amazon",
-    industry: "Technology",
-    role: "Backend Intern",
-    deadline: "2026-07-15",
-    applicants: 87,
-    status: "Pending",
-    description: "Hiring for backend-focused internship positions.",
-  },
-  {
-    id: 3,
-    company: "NVIDIA",
-    industry: "Semiconductors",
-    role: "ML Intern",
-    deadline: "2026-07-05",
-    applicants: 42,
-    status: "Closed",
-    description: "Closed drive for machine learning internship roles.",
-  },
-  {
-    id: 4,
-    company: "Adobe",
-    industry: "Software",
-    role: "Product Intern",
-    deadline: "2026-07-20",
-    applicants: 65,
-    status: "Rejected",
-    description: "Rejected due to incomplete eligibility details.",
-  },
-]);
+const loadDrives = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/drives");
+
+    drives.value = response.data.map((drive) => ({
+      ...drive,
+
+      company: drive.company_name,
+      role: drive.job_title,
+      deadline: new Date(drive.application_deadline).toLocaleDateString(),
+
+      applicants: 0,
+
+      status:
+        drive.approval_status.charAt(0).toUpperCase() +
+        drive.approval_status.slice(1),
+
+      description: drive.job_description,
+
+      industry: drive.job_location,
+    }));
+  } catch (error) {
+    console.error("Failed to load drives:", error);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const headers = [
   { key: "company", label: "Company" },
-  { key: "industry", label: "Industry" },
+  { key: "job_location", label: "Location" },
   { key: "role", label: "Role" },
   { key: "deadline", label: "Deadline" },
   { key: "applicants", label: "Applicants" },
@@ -327,12 +316,14 @@ const viewDrive = (drive) => {
   showDriveModal.value = true;
 };
 
-const approveDrive = (drive) => {
-  drive.status = "Approved";
-};
+const approveDrive = async (drive) => {
+  try {
+    await api.put(`/admin/drives/${drive.drive_id}/approve`);
 
-const closeDrive = (drive) => {
-  drive.status = "Closed";
+    drive.status = "Approved";
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const confirmClose = (drive) => {
@@ -341,8 +332,14 @@ const confirmClose = (drive) => {
   }
 };
 
-const rejectDrive = (drive) => {
-  drives.value = drives.value.filter((d) => d.id !== drive.id);
+const rejectDrive = async (drive) => {
+  try {
+    await api.put(`/admin/drives/${drive.drive_id}/reject`);
+
+    drive.status = "Rejected";
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const confirmReject = (drive) => {
@@ -350,6 +347,39 @@ const confirmReject = (drive) => {
     rejectDrive(drive);
   }
 };
+
+const formatStatus = (status) => {
+  switch (status) {
+    case "approved":
+      return "Approved";
+
+    case "pending":
+      return "Pending";
+
+    case "rejected":
+      return "Rejected";
+
+    case "closed":
+      return "Closed";
+
+    default:
+      return status;
+  }
+};
+
+const closeDrive = async (drive) => {
+  try {
+    await api.put(`/admin/drives/${drive.drive_id}/close`);
+
+    drive.status = "Closed";
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+onMounted(() => {
+  loadDrives();
+});
 </script>
 
 <style scoped>

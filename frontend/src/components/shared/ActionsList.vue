@@ -1,32 +1,33 @@
 <template>
-  <div class="card shadow-sm h-100">
-    <div class="card-header">
-      <h3 class="card-title">
+  <div class="card shadow-sm h-100 border-0">
+    <div class="card-header bg-white">
+      <h5 class="mb-0 fw-semibold">
         {{ title }}
-      </h3>
+      </h5>
     </div>
 
-    <div class="card-body">
-      <div
-        v-for="item in items"
-        :key="item.title"
-        class="d-flex justify-content-between align-items-center py-3 border-bottom"
-      >
-        <div>
-          <div class="fw-medium">
-            {{ item.title }}
+    <div class="card-body p-0">
+      <div v-if="items.length">
+        <div v-for="item in items" :key="item.title" class="action-item">
+          <div>
+            <div class="fw-semibold">
+              {{ item.title }}
+            </div>
+
+            <small class="text-secondary">
+              {{ item.subtitle }}
+            </small>
           </div>
 
-          <small class="text-secondary">
-            {{ item.subtitle }}
-          </small>
+          <RouterLink :to="item.link" class="btn btn-sm btn-outline-primary">
+            View
+          </RouterLink>
         </div>
+      </div>
 
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-success">Approve</button>
-
-          <button class="btn btn-sm btn-outline-danger">Reject</button>
-        </div>
+      <div v-else class="empty-state">
+        <i class="ti ti-check text-success fs-3 mb-2"></i>
+        <div>No pending actions</div>
       </div>
     </div>
   </div>
@@ -35,6 +36,32 @@
 <script setup>
 defineProps({
   title: String,
-  items: Array,
+  items: {
+    type: Array,
+    default: () => [],
+  },
 });
 </script>
+
+<style scoped>
+.action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.action-item:last-child {
+  border-bottom: none;
+}
+
+.empty-state {
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+</style>

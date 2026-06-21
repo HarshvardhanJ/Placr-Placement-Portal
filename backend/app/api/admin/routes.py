@@ -16,12 +16,86 @@ admin_bp = Blueprint("admin_bp", __name__)
 @admin_bp.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.admin)
 def admin_dashboard():
+
+    pending_companies = (
+        Company.query.filter(Company.approval_status == CompanyStatusEnum.not_approved)
+        .limit(5)
+        .all()
+    )
+
+    pending_drives = (
+        Drive.query.filter(Drive.approval_status == DriveStatusEnum.pending)
+        .limit(5)
+        .all()
+    )
+
+    recent_companies = Company.query.order_by(Company.created_at.desc()).limit(3).all()
+
+    recent_drives = Drive.query.order_by(Drive.created_at.desc()).limit(3).all()
+
     return jsonify(
         {
-            "total_students": Student.query.count(),
-            "total_companies": Company.query.count(),
-            "total_drives": Drive.query.count(),
-            "total_applications": Application.query.count(),
+            "stats": {
+                "students": Student.query.count(),
+                "companies": Company.query.count(),
+                "drives": Drive.query.count(),
+                "applications": Application.query.count(),
+                "pending_companies": Company.query.filter(
+                    Company.approval_status == CompanyStatusEnum.not_approved
+                ).count(),
+                "pending_drives": Drive.query.filter(
+                    Drive.approval_status == DriveStatusEnum.pending
+                ).count(),
+                "blacklisted": User.query.filter(User.is_active == False).count(),
+            },
+            "pending": (
+                [
+                    {
+                        "title": c.name,
+                        "subtitle": "Company Approval",
+                        "link": "/admin/companies",
+                    }
+                    for c in pending_companies
+                ]
+                + [
+                    {
+                        "title": d.job_title,
+                        "subtitle": "Drive Approval",
+                        "link": "/admin/drives",
+                    }
+                    for d in pending_drives
+                ]
+            ),
+            "recent_activity": (
+                [
+                    {
+                        "message": f"{c.name} registered",
+                        "time": c.created_at.isoformat(),
+                    }
+                    for c in recent_companies
+                ]
+                + [
+                    {
+                        "message": f"{d.job_title} drive created",
+                        "time": d.created_at.isoformat(),
+                    }
+                    for d in recent_drives
+                ]
+            ),
+            "recent_drives": [
+                {
+                    "drive_id": d.drive_id,
+                    "company_name": d.company.name,
+                    "job_location": d.job_location,
+                    "job_title": d.job_title,
+                    "application_deadline": str(
+                        d.application_deadline.strftime("%d %b %Y")
+                    ),
+                    "applicants": len(d.applications),
+                    "approval_status": d.approval_status.value,
+                }
+                for d in recent_drives
+            ],
         }
     ), 200
 
@@ -153,8 +227,17 @@ def blacklist_student(id):
 @admin_bp.route("/drives", methods=["GET"])
 @role_required(UserRoleEnum.admin)
 def admin_drives():
-    drives = Drive.query.all()
-    return jsonify([d.to_dict() for d in drives]), 200
+    drives = Drive.query.order_by(Drive.created_at.desc()).all()
+
+    return jsonify(
+        [
+            {
+                **d.to_dict(),
+                "applicants": len(d.applications),
+            }
+            for d in drives
+        ]
+    )
 
 
 @admin_bp.route("/drives/<id>/approve", methods=["PUT"])
@@ -184,6 +267,24 @@ def reject_drives(id):
         drive.approval_status = DriveStatusEnum.rejected
         db.session.commit()
         return jsonify({"success": f"Drive {id} rejected"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(
+            {"error": f"Failed to update drive {id}", "details": str(e)}
+        ), 500
+
+
+@admin_bp.route("/drives/<id>/close", methods=["PUT"])
+@role_required(UserRoleEnum.admin)
+def close_drive(id):
+    drive = Drive.query.filter_by(drive_id=id).first()
+
+    if not drive:
+        return jsonify({"error": "Drive not found"}), 404
+    try:
+        drive.approval_status = DriveStatusEnum.closed
+        db.session.commit()
+        return jsonify({"success": "Drive closed"})
     except Exception as e:
         db.session.rollback()
         return jsonify(

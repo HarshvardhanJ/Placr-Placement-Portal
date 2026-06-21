@@ -74,7 +74,6 @@
             <select v-model="statusFilter" class="form-select">
               <option value="">All Statuses</option>
               <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
               <option value="blacklisted">Blacklisted</option>
             </select>
           </div>
@@ -106,30 +105,6 @@
             @click="viewStudent(row)"
           >
             View
-          </button>
-
-          <button
-            v-if="row.status === 'Active'"
-            class="btn btn-sm btn-outline-warning"
-            @click="confirmDeactivate(row)"
-          >
-            Deactivate
-          </button>
-
-          <button
-            v-if="row.status === 'Inactive'"
-            class="btn btn-sm btn-outline-success"
-            @click="activateStudent(row)"
-          >
-            Activate
-          </button>
-
-          <button
-            v-if="row.status === 'Blacklisted'"
-            class="btn btn-sm btn-outline-success"
-            @click="restoreStudent(row)"
-          >
-            Restore
           </button>
 
           <button
@@ -189,7 +164,7 @@
 
               <div class="col-md-6">
                 <label class="text-secondary">Contact</label>
-                <div class="fw-medium">{{ selectedStudent?.contact }}</div>
+                <div class="fw-medium">{{ selectedStudent?.phone_number }}</div>
               </div>
 
               <div class="col-md-6">
@@ -213,7 +188,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import api from "@/services/api";
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
@@ -226,48 +202,8 @@ const statusFilter = ref("");
 const selectedStudent = ref(null);
 const showStudentModal = ref(false);
 
-const students = ref([
-  {
-    id: 1,
-    name: "Rahul Sharma",
-    roll_no: "24CS101",
-    department: "CSE",
-    cgpa: 8.9,
-    email: "rahul@example.com",
-    contact: "+91 98765 43210",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Priya Nair",
-    roll_no: "24EC205",
-    department: "ECE",
-    cgpa: 8.4,
-    email: "priya@example.com",
-    contact: "+91 98765 43211",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    name: "Aman Verma",
-    roll_no: "24ME112",
-    department: "ME",
-    cgpa: 7.9,
-    email: "aman@example.com",
-    contact: "+91 98765 43212",
-    status: "Blacklisted",
-  },
-  {
-    id: 4,
-    name: "Sneha Iyer",
-    roll_no: "24CS143",
-    department: "CSE",
-    cgpa: 9.1,
-    email: "sneha@example.com",
-    contact: "+91 98765 43213",
-    status: "Active",
-  },
-]);
+const students = ref([]);
+const loading = ref(false);
 
 const headers = [
   { key: "name", label: "Name" },
@@ -278,15 +214,29 @@ const headers = [
   { key: "actions", label: "Actions" },
 ];
 
+const loadStudents = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/students");
+
+    students.value = response.data.map((student) => ({
+      ...student,
+
+      status: student.is_active ? "Active" : "Blacklisted",
+    }));
+  } catch (error) {
+    console.error("Failed to load students:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 const stats = computed(() => [
   { title: "Total Students", value: students.value.length },
   {
     title: "Active",
     value: students.value.filter((s) => s.status === "Active").length,
-  },
-  {
-    title: "Inactive",
-    value: students.value.filter((s) => s.status === "Inactive").length,
   },
   {
     title: "Blacklisted",
@@ -299,11 +249,11 @@ const filteredStudents = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     const matchesSearch =
-      student.name.toLowerCase().includes(query) ||
-      student.roll_no.toLowerCase().includes(query) ||
-      student.department.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query) ||
-      student.contact.toLowerCase().includes(query);
+      student.name?.toLowerCase().includes(query) ||
+      student.roll_no?.toLowerCase().includes(query) ||
+      student.department?.toLowerCase().includes(query) ||
+      student.email?.toLowerCase().includes(query) ||
+      student.phone_number?.toLowerCase().includes(query);
 
     const matchesStatus =
       !statusFilter.value ||
@@ -336,22 +286,15 @@ const viewStudent = (student) => {
   showStudentModal.value = true;
 };
 
-const deactivateStudent = (student) => {
-  student.status = "Inactive";
-};
+const blacklistStudent = async (student) => {
+  try {
+    await api.put(`/admin/students/${student.student_id}/blacklist`);
 
-const confirmDeactivate = (student) => {
-  if (window.confirm(`Deactivate ${student.name}?`)) {
-    deactivateStudent(student);
+    student.status = "Blacklisted";
+    student.is_active = false;
+  } catch (error) {
+    console.error(error);
   }
-};
-
-const activateStudent = (student) => {
-  student.status = "Active";
-};
-
-const blacklistStudent = (student) => {
-  student.status = "Blacklisted";
 };
 
 const confirmBlacklist = (student) => {
@@ -360,9 +303,9 @@ const confirmBlacklist = (student) => {
   }
 };
 
-const restoreStudent = (student) => {
-  student.status = "Active";
-};
+onMounted(() => {
+  loadStudents();
+});
 </script>
 
 <style scoped>

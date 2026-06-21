@@ -39,99 +39,113 @@
 
     <div class="row g-4 mb-4">
       <div class="col-xl-8">
-        <ActionList title="Pending Approvals" :items="pending" />
+        <ActionList
+          title="Pending Approvals"
+          :items="dashboard.pending || []"
+        />
       </div>
 
       <div class="col-xl-4">
-        <RecentActivity title="Recent Activity" :activities="activities" />
+        <RecentActivity
+          title="Recent Activity"
+          :activities="dashboard.recent_activity || []"
+        />
       </div>
     </div>
 
     <div class="row g-4">
       <div class="col-12">
-        <DataTable title="Upcoming Drives" :headers="headers" :rows="drives" />
+        <DataTable
+          title="Recent Drives"
+          :headers="headers"
+          :rows="dashboard.recent_drives"
+        >
+          <template #approval_status="{ row }">
+            <span
+              class="badge"
+              :class="{
+                'text-bg-success': row.approval_status === 'approved',
+                'text-bg-warning': row.approval_status === 'pending',
+                'text-bg-danger': row.approval_status === 'rejected',
+                'text-bg-secondary': row.approval_status === 'closed',
+              }"
+            >
+              {{ row.approval_status }}
+            </span>
+          </template>
+        </DataTable>
       </div>
     </div>
   </DashboardLayout>
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from "vue";
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import StatCard from "@/components/shared/StatCard.vue";
 import DataTable from "@/components/shared/DataTable.vue";
 import RecentActivity from "@/components/shared/RecentActivity.vue";
 import ActionList from "@/components/shared/ActionsList.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
+import api from "@/services/api";
 
-const stats = [
-  { title: "Students", value: 1248 },
-  { title: "Companies", value: 142 },
-  { title: "Drives", value: 24 },
-  { title: "Applications", value: 7856 },
-];
+const loading = ref(false);
 
-const activities = [
-  {
-    message: "Google India approved",
-    time: "10 mins ago",
-    color: "success",
+const dashboard = ref({
+  stats: {
+    students: 0,
+    companies: 0,
+    drives: 0,
+    applications: 0,
   },
-  {
-    message: "Amazon drive created",
-    time: "1 hour ago",
-    color: "primary",
-  },
-  {
-    message: "New student account verified",
-    time: "3 hours ago",
-    color: "warning",
-  },
-];
-
-const pending = [
-  {
-    title: "Google India",
-    subtitle: "Company",
-  },
-  {
-    title: "Amazon Backend Intern",
-    subtitle: "Drive",
-  },
-  {
-    title: "NVIDIA",
-    subtitle: "Company",
-  },
-];
+  pending: [],
+  recent_activity: [],
+  recent_drives: [],
+});
 
 const headers = [
-  { key: "company", label: "Company" },
-  { key: "role", label: "Role" },
-  { key: "deadline", label: "Deadline" },
+  { key: "company_name", label: "Company" },
+  { key: "job_location", label: "Location" },
+  { key: "job_title", label: "Role" },
+  { key: "application_deadline", label: "Deadline" },
   { key: "applicants", label: "Applicants" },
-  { key: "status", label: "Status" },
+  { key: "approval_status", label: "Status" },
 ];
 
-const drives = [
+const loadDashboard = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/dashboard");
+
+    dashboard.value = response.data;
+  } catch (error) {
+    console.error("Failed to load dashboard:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const stats = computed(() => [
   {
-    company: "Google",
-    role: "SDE Intern",
-    deadline: "20 Jun",
-    applicants: 120,
-    status: "Open",
+    title: "Students",
+    value: dashboard.value.stats.students,
   },
   {
-    company: "Amazon",
-    role: "Backend Intern",
-    deadline: "25 Jun",
-    applicants: 85,
-    status: "Pending",
+    title: "Companies",
+    value: dashboard.value.stats.companies,
   },
   {
-    company: "NVIDIA",
-    role: "ML Intern",
-    deadline: "28 Jun",
-    applicants: 64,
-    status: "Open",
+    title: "Drives",
+    value: dashboard.value.stats.drives,
   },
-];
+  {
+    title: "Applications",
+    value: dashboard.value.stats.applications,
+  },
+]);
+
+onMounted(() => {
+  loadDashboard();
+});
 </script>

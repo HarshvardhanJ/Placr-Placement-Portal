@@ -51,6 +51,7 @@ class Drive(db.Model):
             "job_description": self.job_description,
             "job_location": self.job_location,
             "application_deadline": str(self.application_deadline),
+            "applicants": len(self.applications),
             "min_cgpa": self.min_cgpa,
             "required_skills": self.required_skills,
             "experience_required": self.experience_required,

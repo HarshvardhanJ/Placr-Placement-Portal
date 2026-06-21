@@ -14,12 +14,20 @@
           </tr>
         </thead>
 
-        <tbody>
+        <tbody v-if="rows.length">
           <tr v-for="(row, index) in rows" :key="index">
             <td v-for="header in headers" :key="header.key">
               <slot :name="header.key" :row="row">
                 {{ row[header.key] }}
               </slot>
+            </td>
+          </tr>
+        </tbody>
+
+        <tbody v-else>
+          <tr>
+            <td :colspan="headers.length" class="empty-table">
+              No data available.
             </td>
           </tr>
         </tbody>
@@ -48,5 +56,11 @@ defineProps({
 
 .table tbody td {
   vertical-align: middle;
+}
+
+.empty-table {
+  padding: 3rem;
+  text-align: center;
+  color: #6c757d;
 }
 </style>

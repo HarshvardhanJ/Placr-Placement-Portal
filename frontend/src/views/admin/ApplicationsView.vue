@@ -90,6 +90,15 @@
       </div>
     </div>
 
+    <div v-if="loading" class="card shadow-sm p-5 text-center">
+      Loading applications...
+    </div>
+    <div
+      v-if="!loading && !filteredApplications.length"
+      class="card shadow-sm p-5 text-center"
+    >
+      No applications found.
+    </div>
     <DataTable
       title="Applications"
       :headers="headers"
@@ -199,63 +208,22 @@ const statusFilter = ref("");
 
 const selectedApplication = ref(null);
 const showApplicationModal = ref(false);
+const loading = ref(false);
+const applications = ref([]);
 
-const applications = ref([
-  {
-    application_id: 1,
-    student_name: "Rahul Sharma",
-    roll_no: "24CS101",
-    company: "Google",
-    job_title: "SDE Intern",
-    status: "applied",
-    application_date: "2026-06-15",
-  },
-  {
-    application_id: 2,
-    student_name: "Priya Nair",
-    roll_no: "24EC205",
-    company: "Amazon",
-    job_title: "Backend Intern",
-    status: "shortlisted",
-    application_date: "2026-06-14",
-  },
-  {
-    application_id: 3,
-    student_name: "Aman Verma",
-    roll_no: "24ME112",
-    company: "NVIDIA",
-    job_title: "ML Intern",
-    status: "selected",
-    application_date: "2026-06-12",
-  },
-  {
-    application_id: 4,
-    student_name: "Sneha Iyer",
-    roll_no: "24CS143",
-    company: "Adobe",
-    job_title: "Product Intern",
-    status: "rejected",
-    application_date: "2026-06-11",
-  },
-  {
-    application_id: 5,
-    student_name: "Arjun Menon",
-    roll_no: "24EE087",
-    company: "Microsoft",
-    job_title: "Software Intern",
-    status: "applied",
-    application_date: "2026-06-18",
-  },
-  {
-    application_id: 6,
-    student_name: "Meera Nair",
-    roll_no: "24CS127",
-    company: "Goldman Sachs",
-    job_title: "Summer Analyst",
-    status: "shortlisted",
-    application_date: "2026-06-17",
-  },
-]);
+const loadApplications = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/applications");
+
+    applications.value = response.data;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const headers = [
   { key: "student_name", label: "Student" },
@@ -290,17 +258,9 @@ const stats = computed(() => [
     value: applications.value.filter((a) => a.status === "selected").length,
   },
 ]);
-// const loadApplications = async () => {
-//   try {
-//     const response = await api.get("/admin/applications");
-//     applications.value = response.data;
-//   } catch (error) {
-//     console.error("Failed to load applications:", error);
-//   }
-// };
 
 onMounted(() => {
-  // loadApplications();
+  loadApplications();
 });
 
 const statusBadgeClass = (status) => {

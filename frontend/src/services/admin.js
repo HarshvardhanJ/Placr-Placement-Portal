@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "api";
 
 export const getApplications = () => {
   return api.get("/admin/applications");

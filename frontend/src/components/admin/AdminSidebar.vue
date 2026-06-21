@@ -70,17 +70,23 @@
 
       <div class="stat-row">
         <span>Pending Companies</span>
-        <span class="badge text-bg-warning">4</span>
+        <span class="badge text-bg-warning">
+          {{ stats.pending_companies }}
+        </span>
       </div>
 
       <div class="stat-row">
         <span>Pending Drives</span>
-        <span class="badge text-bg-info">2</span>
+        <span class="badge text-bg-info">
+          {{ stats.pending_drives }}
+        </span>
       </div>
 
       <div class="stat-row">
         <span>Blacklisted</span>
-        <span class="badge text-bg-danger">1</span>
+        <span class="badge text-bg-danger">
+          {{ stats.blacklisted }}
+        </span>
       </div>
     </div>
 
@@ -105,6 +111,27 @@
     </div>
   </aside>
 </template>
+
+<script setup>
+import { useRouter } from "vue-router";
+import useAuthStore from "@/stores/authStore";
+import { storeToRefs } from "pinia";
+import { useAdminStore } from "@/stores/adminStore";
+
+const adminStore = useAdminStore();
+const router = useRouter();
+const authStore = useAuthStore();
+const { stats } = storeToRefs(adminStore);
+
+const logout = () => {
+  if (!window.confirm("Are you sure you want to logout?")) {
+    return;
+  }
+
+  authStore.logout();
+  router.push("/login");
+};
+</script>
 
 <style scoped>
 .admin-sidebar {
@@ -292,16 +319,3 @@
   }
 }
 </style>
-
-<script setup>
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-
-const logout = () => {
-  if (window.confirm("Are you sure you want to logout?")) {
-    // TODO - API linking
-    router.push("/login");
-  }
-};
-</script>

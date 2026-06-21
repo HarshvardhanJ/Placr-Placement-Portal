@@ -17,6 +17,14 @@
 <script setup>
 import AdminSidebar from "@/components/admin/AdminSidebar.vue";
 import AdminTopbar from "@/components/admin/AdminTopbar.vue";
+import { onMounted } from "vue";
+import { useAdminStore } from "@/stores/adminStore";
+
+const adminStore = useAdminStore();
+
+onMounted(() => {
+  adminStore.fetchDashboardStats();
+});
 </script>
 
 <style scoped>
