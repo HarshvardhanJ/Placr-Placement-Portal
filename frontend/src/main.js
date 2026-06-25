@@ -3,6 +3,7 @@ import "./style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
 import "@tabler/core/dist/css/tabler.min.css";
+import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 import App from "./App.vue";
 import router from "./router";
 import { createPinia } from "pinia";

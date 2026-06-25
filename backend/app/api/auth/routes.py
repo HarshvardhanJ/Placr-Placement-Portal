@@ -183,6 +183,54 @@ def me():
         ), 200
 
 
+@auth_bp.route("/change-password", methods=["PUT"])
+@jwt_required()
+def change_password():
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(user_id=user_id).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json(silent=True)
+
+    if (
+        not data
+        or "current_password" not in data
+        or "new_password" not in data
+        or "repeat_password" not in data
+    ):
+        return jsonify({"error": "Missing data fields"}), 400
+
+    current_password = data["current_password"]
+    new_password = data["new_password"]
+    repeat_password = data["repeat_password"]
+
+    if not bcrypt.check_password_hash(user.password, current_password):
+        return jsonify({"error": "Current password is incorrect"}), 401
+
+    if not validate_password(new_password):
+        return jsonify(
+            {
+                "error": (
+                    "Password must be at least 8 characters long "
+                    "and contain uppercase, lowercase, and numeric characters."
+                )
+            }
+        ), 400
+
+    if new_password != repeat_password:
+        return jsonify({"error": "Passwords do not match"}), 400
+
+    try:
+        user.password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        db.session.commit()
+        return jsonify({"message": "Password updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to update password", "details": str(e)}), 500
+
+
 def validate_password(password):
     return (
         len(password) >= 8

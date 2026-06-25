@@ -10,7 +10,14 @@ import AdminCompaniesView from "@/views/admin/CompaniesView.vue";
 import AdminStudentsView from "@/views/admin/StudentsView.vue";
 import AdminDrivesView from "@/views/admin/DrivesView.vue";
 import AdminApplicationsView from "@/views/admin/ApplicationsView.vue";
-// import CompanyDashboardView from "@/views/company/DashboardView.vue";
+import CompanyDashboardView from "@/views/company/DashboardView.vue";
+import CompanyDrivesView from "@/views/company/DrivesView.vue";
+import CompanyApplicationsView from "@/views/company/ApplicationsView.vue";
+import CompanyInterviewsView from "@/views/company/InterviewsView.vue";
+import CompanyProfileView from "@/views/company/ProfileView.vue";
+import CompanySettingsView from "@/views/company/SettingsView.vue";
+import CompanyPlacementsView from "@/views/company/PlacementsView.vue";
+import CompanyDriveDetailsView from "@/views/company/DriveDetailsView.vue";
 // import StudentDashboardView from "@/views/student/DashboardView.vue";
 
 const routes = [
@@ -39,6 +46,7 @@ const routes = [
     name: "company-register",
     component: CompanyRegisterView,
   },
+  // ADMIN ROUTES
   {
     path: "/admin",
     name: "admin-dashboard",
@@ -64,11 +72,51 @@ const routes = [
     name: "admin-application-dashboard",
     component: AdminApplicationsView,
   },
-  // {
-  //   path: "/company",
-  //   name: "company-dashboard",
-  //   component: CompanyDashboardView,
-  // },
+  // COMPANY ROUTES
+  {
+    path: "/company",
+    name: "company-dashboard",
+    component: CompanyDashboardView,
+    // meta: {
+    //   requiresAuth: true,
+    //   role: "company",
+    // },
+  },
+  {
+    path: "/company/drives",
+    name: "company-drives",
+    component: CompanyDrivesView,
+  },
+  {
+    path: "/company/drives/:id",
+    name: "company-drive-details",
+    component: CompanyDriveDetailsView,
+  },
+  {
+    path: "/company/applications",
+    name: "company-applications",
+    component: CompanyApplicationsView,
+  },
+  {
+    path: "/company/interviews",
+    name: "company-interviews",
+    component: CompanyInterviewsView,
+  },
+  {
+    path: "/company/placements",
+    name: "company-placements",
+    component: CompanyPlacementsView,
+  },
+  {
+    path: "/company/profile",
+    name: "company-profile",
+    component: CompanyProfileView,
+  },
+  {
+    path: "/company/settings",
+    name: "company-settings",
+    component: CompanySettingsView,
+  },
   // {
   //   path: "/student",
   //   name: "student-dashboard",

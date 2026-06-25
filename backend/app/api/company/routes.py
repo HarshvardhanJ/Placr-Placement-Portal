@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.extensions import db
 from app.models.application import Application, ApplicationStatusEnum, InterviewEnum
 from app.models.company import Company
@@ -6,7 +6,7 @@ from app.models.drive import Drive, DriveStatusEnum
 from app.models.placement import Placement
 from app.models.user import UserRoleEnum
 from app.utils.decorators import approved_company_required, role_required
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity
 import os
 import uuid
@@ -37,95 +37,87 @@ def company_dashboard():
         .all()
     )
 
-    shortlisted = [
-        app for app in applications if app.status == ApplicationStatusEnum.shortlisted
-    ]
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
 
+    active_drive_records = [
+        drive for drive in drives if drive.approval_status == DriveStatusEnum.approved
+    ]
     selected = [
         app for app in applications if app.status == ApplicationStatusEnum.selected
     ]
+    interviews_scheduled = [
+        app for app in applications if app.interview_date and app.interview_date > now
+    ]
 
-    upcoming_interviews = [
-        app
-        for app in shortlisted
-        if app.interview_date and app.interview_date > datetime.utcnow()
+    def pipeline_status(drive):
+        drive_apps = [app for app in applications if app.drive_id == drive.drive_id]
+        if any(
+            app.status == ApplicationStatusEnum.shortlisted and app.interview_date
+            for app in drive_apps
+        ):
+            return "interviewing"
+        if any(app.status == ApplicationStatusEnum.shortlisted for app in drive_apps):
+            return "shortlisting"
+        return "active"
+
+    active_drives_payload = [
+        {
+            "drive_id": drive.drive_id,
+            "job_title": drive.job_title,
+            "job_location": drive.job_location,
+            "company_name": company.name,
+            "applicants_count": len(drive.applications),
+            "status": pipeline_status(drive),
+            "application_deadline": str(drive.application_deadline),
+        }
+        for drive in sorted(
+            active_drive_records, key=lambda d: d.created_at, reverse=True
+        )[:6]
+    ]
+
+    recent_applicants_payload = [
+        {
+            "application_id": app.application_id,
+            "drive_id": app.drive_id,
+            "student_name": app.student.name,
+            "roll_no": app.student.roll_no,
+            "job_title": app.drive.job_title,
+            "status": app.status.value,
+            "application_date": str(app.application_date),
+        }
+        for app in sorted(applications, key=lambda a: a.application_date, reverse=True)[
+            :6
+        ]
     ]
 
     return jsonify(
         {
-            "company": {
-                "company_id": company.company_id,
-                "name": company.name,
-                "industry": company.industry,
-                "location": company.location,
-                "description": company.description,
-                "approval_status": company.approval_status.value,
+            "company": company.to_dict(),
+            "stats": {
+                "active_drives": len(active_drive_records),
+                "total_applications": len(applications),
+                "interviews_scheduled": len(interviews_scheduled),
+                "offers_made": len(selected),
             },
-            "counts": {
-                "drives": len(drives),
-                "applications": len(applications),
-                "shortlisted": len(shortlisted),
-                "selected": len(selected),
-                "upcoming_interviews": len(upcoming_interviews),
+            "trends": {
+                "active_drives_new_7d": len(
+                    [
+                        d
+                        for d in active_drive_records
+                        if d.created_at and d.created_at > week_ago
+                    ]
+                ),
+                "total_applications_new_7d": len(
+                    [
+                        a
+                        for a in applications
+                        if a.application_date and a.application_date > week_ago
+                    ]
+                ),
             },
-            "recent_drives": [
-                {
-                    "drive_id": drive.drive_id,
-                    "job_title": drive.job_title,
-                    "required_skills": drive.required_skills,
-                    "experience_required": drive.experience_required,
-                    "benefits": drive.benefits,
-                    "approval_status": drive.approval_status.value,
-                    "application_deadline": str(drive.application_deadline),
-                    "applications": len(drive.applications),
-                }
-                for drive in drives[:5]
-            ],
-            "recent_applications": [
-                {
-                    "application_id": app.application_id,
-                    "student_name": app.student.name,
-                    "roll_no": app.student.roll_no,
-                    "job_title": app.drive.job_title,
-                    "status": app.status.value,
-                    "applied_on": str(app.application_date),
-                }
-                for app in sorted(
-                    applications,
-                    key=lambda a: a.application_date,
-                    reverse=True,
-                )[:10]
-            ],
-            "shortlisted_candidates": [
-                {
-                    "application_id": app.application_id,
-                    "student_name": app.student.name,
-                    "roll_no": app.student.roll_no,
-                    "job_title": app.drive.job_title,
-                    "interview_date": (
-                        str(app.interview_date) if app.interview_date else None
-                    ),
-                    "interview_type": (
-                        app.interview_type.value if app.interview_type else None
-                    ),
-                }
-                for app in shortlisted[:10]
-            ],
-            "upcoming_interviews": [
-                {
-                    "application_id": app.application_id,
-                    "student_name": app.student.name,
-                    "job_title": app.drive.job_title,
-                    "interview_date": str(app.interview_date),
-                    "interview_type": (
-                        app.interview_type.value if app.interview_type else None
-                    ),
-                }
-                for app in sorted(
-                    upcoming_interviews,
-                    key=lambda a: a.interview_date,
-                )
-            ],
+            "active_drives": active_drives_payload,
+            "recent_applicants": recent_applicants_payload,
         }
     ), 200
 
@@ -373,6 +365,10 @@ def get_drive_application(id):
     if not drive:
         return jsonify({"error": f"Failed to find drive with id {id}"}), 404
 
+    applications = sorted(
+        drive.applications, key=lambda a: a.application_date, reverse=True
+    )
+
     return jsonify(
         {
             "drive_id": drive.drive_id,
@@ -381,8 +377,104 @@ def get_drive_application(id):
             "experience_required": drive.experience_required,
             "benefits": drive.benefits,
             "applications": [
-                application.to_dict() for application in drive.applications
+                {
+                    "application_id": app.application_id,
+                    "student_id": app.student_id,
+                    "student_name": app.student.name,
+                    "roll_no": app.student.roll_no,
+                    "department": app.student.department,
+                    "cgpa": app.student.cgpa,
+                    "resume_uploaded": bool(app.student.resume_path),
+                    "job_title": drive.job_title,
+                    "status": app.status.value,
+                    "remarks": app.remarks,
+                    "application_date": str(app.application_date),
+                    "interview_date": (
+                        str(app.interview_date) if app.interview_date else None
+                    ),
+                    "interview_type": (
+                        app.interview_type.value if app.interview_type else None
+                    ),
+                }
+                for app in applications
             ],
+        }
+    ), 200
+
+
+@company_api.route("/applications/<app_id>/resume", methods=["GET"])
+@role_required(UserRoleEnum.company)
+@approved_company_required
+def download_applicant_resume(app_id):
+    user_id = get_jwt_identity()
+    company = Company.query.filter_by(user_id=user_id).first()
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    application = (
+        Application.query.join(Drive)
+        .filter(
+            Application.application_id == app_id,
+            Drive.company_id == company.company_id,
+        )
+        .first()
+    )
+
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    resume_path = application.student.resume_path
+
+    if not resume_path or not os.path.exists(resume_path):
+        return jsonify({"error": "Resume not uploaded"}), 404
+
+    return send_file(
+        resume_path,
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=f"{application.student.roll_no}_resume.pdf",
+    )
+
+
+@company_api.route("/interviews", methods=["GET"])
+@role_required(UserRoleEnum.company)
+@approved_company_required
+def get_company_interviews():
+    user_id = get_jwt_identity()
+    company = Company.query.filter_by(user_id=user_id).first()
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    applications = (
+        Application.query.join(Drive)
+        .filter(
+            Drive.company_id == company.company_id,
+            Application.interview_date.isnot(None),
+        )
+        .order_by(Application.interview_date.asc())
+        .all()
+    )
+
+    now = datetime.utcnow()
+
+    return jsonify(
+        {
+            "interviews": [
+                {
+                    "application_id": app.application_id,
+                    "drive_id": app.drive_id,
+                    "job_title": app.drive.job_title,
+                    "student_name": app.student.name,
+                    "roll_no": app.student.roll_no,
+                    "status": app.status.value,
+                    "interview_date": str(app.interview_date),
+                    "interview_type": (
+                        app.interview_type.value if app.interview_type else None
+                    ),
+                    "is_upcoming": app.interview_date > now,
+                }
+                for app in applications
+            ]
         }
     ), 200
 

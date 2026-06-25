@@ -2,6 +2,7 @@
   <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">{{ title }}</h3>
+      <slot name="header-actions" />
     </div>
 
     <div class="table-responsive">
