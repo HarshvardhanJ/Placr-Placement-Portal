@@ -18,7 +18,13 @@ import CompanyProfileView from "@/views/company/ProfileView.vue";
 import CompanySettingsView from "@/views/company/SettingsView.vue";
 import CompanyPlacementsView from "@/views/company/PlacementsView.vue";
 import CompanyDriveDetailsView from "@/views/company/DriveDetailsView.vue";
-// import StudentDashboardView from "@/views/student/DashboardView.vue";
+import StudentDashboardView from "@/views/student/DashboardView.vue";
+import StudentJobsView from "@/views/student/JobsView.vue";
+import StudentApplicationsView from "@/views/student/ApplicationsView.vue";
+import StudentInterviewsView from "@/views/student/InterviewsView.vue";
+import StudentPlacementsView from "@/views/student/PlacementsView.vue";
+import StudentProfileView from "@/views/student/ProfileView.vue";
+import StudentSettingsView from "@/views/student/SettingsView.vue";
 
 const routes = [
   {
@@ -77,10 +83,6 @@ const routes = [
     path: "/company",
     name: "company-dashboard",
     component: CompanyDashboardView,
-    // meta: {
-    //   requiresAuth: true,
-    //   role: "company",
-    // },
   },
   {
     path: "/company/drives",
@@ -117,11 +119,42 @@ const routes = [
     name: "company-settings",
     component: CompanySettingsView,
   },
-  // {
-  //   path: "/student",
-  //   name: "student-dashboard",
-  //   component: StudentDashboardView,
-  // },
+  // STUDENT ROUTES
+  {
+    path: "/student",
+    name: "student-dashboard",
+    component: StudentDashboardView,
+  },
+  {
+    path: "/student/drives",
+    name: "student-drives",
+    component: StudentJobsView,
+  },
+  {
+    path: "/student/applications",
+    name: "student-applications",
+    component: StudentApplicationsView,
+  },
+  {
+    path: "/student/interviews",
+    name: "student-interviews",
+    component: StudentInterviewsView,
+  },
+  {
+    path: "/student/placements",
+    name: "student-placements",
+    component: StudentPlacementsView,
+  },
+  {
+    path: "/student/profile",
+    name: "student-profile",
+    component: StudentProfileView,
+  },
+  {
+    path: "/student/settings",
+    name: "student-settings",
+    component: StudentSettingsView,
+  },
 ];
 
 const router = createRouter({
