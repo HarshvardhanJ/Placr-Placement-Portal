@@ -3,7 +3,7 @@
     <div class="sidebar-brand">
       <div class="brand-text">
         <h4>PLACR</h4>
-        <small>Placement Portal</small>
+        <small>Company Portal</small>
       </div>
     </div>
 

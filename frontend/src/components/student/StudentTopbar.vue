@@ -14,13 +14,6 @@
     </div>
 
     <div class="topbar-right">
-      <button class="icon-btn" type="button" title="Theme">
-        <i class="ti ti-moon-stars"></i>
-      </button>
-      <button class="icon-btn" type="button" title="Notifications">
-        <i class="ti ti-bell"></i>
-      </button>
-
       <div class="user-profile">
         <div class="avatar">{{ initials }}</div>
         <div class="user-info">

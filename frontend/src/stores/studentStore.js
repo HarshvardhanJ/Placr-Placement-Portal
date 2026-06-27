@@ -15,6 +15,18 @@ const defaultDashboard = {
   upcoming_interviews: [],
 };
 
+const hasValue = (value) =>
+  value !== null && value !== undefined && String(value).trim() !== "";
+
+const normalizeProfile = (profile) => {
+  if (!profile) return null;
+  return {
+    ...profile,
+    cgpa: profile.cgpa ?? null,
+    year: profile.year ?? null,
+  };
+};
+
 export const useStudentStore = defineStore("student", {
   state: () => ({
     dashboard: { ...defaultDashboard },
@@ -58,6 +70,14 @@ export const useStudentStore = defineStore("student", {
         state.profile?.resume_path ||
         state.profile?.resume_url ||
         state.profile?.resume,
+      );
+    },
+
+    profileComplete(state) {
+      return Boolean(
+        hasValue(state.profile?.department) &&
+        hasValue(state.profile?.cgpa) &&
+        hasValue(state.profile?.year),
       );
     },
 
@@ -174,12 +194,6 @@ export const useStudentStore = defineStore("student", {
         selected: selected.length,
       };
     },
-
-    profileComplete(state) {
-      return Boolean(
-        state.profile?.department && state.profile?.cgpa && state.profile?.year,
-      );
-    },
   },
 
   actions: {
@@ -191,6 +205,10 @@ export const useStudentStore = defineStore("student", {
       this.placements = [];
       this.error = null;
       this.profileWarning = false;
+    },
+
+    async bootstrapStudentState() {
+      await Promise.allSettled([this.fetchProfile(), this.fetchDashboard()]);
     },
 
     async fetchDashboard(force = false) {
@@ -216,10 +234,10 @@ export const useStudentStore = defineStore("student", {
 
         if (error?.response?.status === 400) {
           this.profileWarning = true;
-        } else {
-          this.error = message;
+          return null;
         }
 
+        this.error = message;
         throw error;
       } finally {
         this.loadingDashboard = false;
@@ -234,7 +252,7 @@ export const useStudentStore = defineStore("student", {
 
       try {
         const data = await studentApi.getProfile();
-        this.profile = data;
+        this.profile = normalizeProfile(data);
         return data;
       } catch (error) {
         this.error =
@@ -245,21 +263,31 @@ export const useStudentStore = defineStore("student", {
       }
     },
 
-    async refreshStudentState() {
-      await Promise.allSettled([this.fetchProfile(), this.fetchDashboard()]);
-    },
-
     async updateProfile(payload) {
       const data = await studentApi.updateProfile(payload);
-      this.profile = data.student || data;
+      this.profile = normalizeProfile(data.student || data);
+      this.error = null;
+
+      if (this.profileComplete) {
+        this.profileWarning = false;
+        await this.fetchDashboard(true);
+      }
+
       return data;
     },
 
     async uploadResume(file) {
       const data = await studentApi.uploadResume(file);
+
       if (this.profile) {
-        this.profile.resume_path = data.resume_path;
+        this.profile.resume_path = data.resume_path || this.profile.resume_path;
+        if (data.resume_url) this.profile.resume_url = data.resume_url;
       }
+
+      if (this.profileComplete) {
+        await this.fetchDashboard(true);
+      }
+
       return data;
     },
 

@@ -3,14 +3,9 @@
     <div class="sidebar-brand">
       <div class="brand-text">
         <h4>PLACR</h4>
-        <small>Placement Portal</small>
+        <small>Student Portal</small>
       </div>
     </div>
-
-    <RouterLink to="/student" class="primary-action">
-      <i class="ti ti-plus"></i>
-      <span>Complete Profile</span>
-    </RouterLink>
 
     <div class="sidebar-divider"></div>
 
