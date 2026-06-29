@@ -125,8 +125,16 @@
                   v-for="drive in filteredDrives"
                   :key="drive.cardKey"
                   :drive="drive"
-                  :action-label="driveActionLabel(drive)"
-                  :disabled="drive.actionDisabled"
+                  :action-label="
+                    applyingDriveId === drive.drive_id
+                      ? 'Applying...'
+                      : driveActionLabel(drive)
+                  "
+                  :disabled="
+                    drive.actionDisabled ||
+                    applyingDriveId === drive.drive_id
+                  "
+                  @action="handleApply(drive)"
                 />
               </div>
 
@@ -282,6 +290,7 @@ const { dashboard, profile } = storeToRefs(store);
 const searchQuery = ref("");
 const activeTab = ref("all");
 const sortBy = ref("deadline");
+const applyingDriveId = ref(null);
 
 const tabs = [
   { key: "all", label: "All" },
@@ -460,9 +469,9 @@ const filteredDrives = computed(() => {
     }
 
     if (sortBy.value === "salary") {
-      const aMin = Number(a.salary_min ?? a.min_salary ?? 0);
-      const bMin = Number(b.salary_min ?? b.min_salary ?? 0);
-      return bMin - aMin;
+      const aSalary = Number(a.salary ?? a.salary_min ?? a.min_salary ?? 0);
+      const bSalary = Number(b.salary ?? b.salary_min ?? b.min_salary ?? 0);
+      return bSalary - aSalary;
     }
 
     const aDate = new Date(a.application_deadline || a.deadline || 0).getTime();
@@ -485,6 +494,27 @@ const driveActionLabel = (drive) => {
   if (drive.driveStatus === "shortlisted") return "Shortlisted";
   if (drive.driveStatus === "selected") return "Selected";
   return "View Details";
+};
+
+const handleApply = async (drive) => {
+  if (!drive?.drive_id || drive.driveStatus !== "eligible") return;
+
+  if (
+    !window.confirm(
+      `Apply to ${drive.job_title || "this drive"} at ${
+        drive.company_name || drive.company?.name || "this company"
+      }?`,
+    )
+  ) {
+    return;
+  }
+
+  applyingDriveId.value = drive.drive_id;
+  try {
+    await store.applyToDrive(drive.drive_id);
+  } finally {
+    applyingDriveId.value = null;
+  }
 };
 
 const deadlineLabel = (drive) => {

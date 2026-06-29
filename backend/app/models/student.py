@@ -1,6 +1,7 @@
 from sqlalchemy.orm import backref
 
 from app.extensions import db
+import os
 import uuid
 
 
@@ -28,6 +29,8 @@ class Student(db.Model):
     applications = db.relationship("Application", backref="student", lazy=True)
 
     def to_dict(self):
+        resume_filename = os.path.basename(self.resume_path) if self.resume_path else None
+
         return {
             "student_id": self.student_id,
             "user_id": self.user_id,
@@ -39,5 +42,8 @@ class Student(db.Model):
             "year": self.year,
             "skills": self.skills,
             "experience": self.experience,
+            "resume_path": self.resume_path,
+            "resume_uploaded": bool(self.resume_path),
+            "resume_filename": resume_filename,
             "created_at": str(self.created_at),
         }

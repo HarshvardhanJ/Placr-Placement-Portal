@@ -211,7 +211,7 @@
                 <p class="text-muted small mb-3">
                   {{
                     hasResume
-                      ? "Replace it anytime with a newer version."
+                      ? `Current file: ${profileData.resume_filename || "resume.pdf"}. You can replace it anytime.`
                       : "Upload a PDF so you can apply to drives."
                   }}
                 </p>
@@ -232,16 +232,17 @@
                   >
                     {{ hasResume ? "Replace Resume" : "Upload Resume" }}
                   </button>
-
-                  <a
-                    v-if="resumeUrl"
-                    :href="resumeUrl"
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    v-if="hasResume"
+                    type="button"
                     class="btn btn-outline-secondary btn-sm"
+                    @click="viewResume"
                   >
-                    View Current
-                  </a>
+                    View Resume
+                  </button>
+                  <span v-if="hasResume" class="text-muted small align-self-center">
+                    {{ profileData.resume_filename || "Resume uploaded" }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -265,25 +266,27 @@
                 <div class="summary-item">
                   <div class="summary-label">Department</div>
                   <div class="summary-value">
-                    {{ profile.department || "Not set" }}
+                    {{ profileData.department || "Not set" }}
                   </div>
                 </div>
                 <div class="summary-item">
                   <div class="summary-label">CGPA</div>
                   <div class="summary-value">
-                    {{ profile.cgpa ?? "Not set" }}
+                    {{ profileData.cgpa ?? "Not set" }}
                   </div>
                 </div>
                 <div class="summary-item">
                   <div class="summary-label">Year</div>
                   <div class="summary-value">
-                    {{ profile.year ? `${profile.year} Year` : "Not set" }}
+                    {{
+                      profileData.year ? `${profileData.year} Year` : "Not set"
+                    }}
                   </div>
                 </div>
                 <div class="summary-item">
                   <div class="summary-label">Phone</div>
                   <div class="summary-value">
-                    {{ profile.phone_number || "Not set" }}
+                    {{ profileData.phone_number || "Not set" }}
                   </div>
                 </div>
               </div>
@@ -343,6 +346,7 @@ const form = reactive({
   experience: "",
 });
 
+const profileData = computed(() => profile.value ?? {});
 const profileName = computed(() => profile.value?.name || "Student");
 const initials = computed(() => {
   const name = profileName.value;
@@ -364,15 +368,13 @@ const profileComplete = computed(() =>
 
 const hasResume = computed(() =>
   Boolean(
+    profile.value?.resume_uploaded ||
     profile.value?.resume_path ||
     profile.value?.resume_url ||
     profile.value?.resume,
   ),
 );
 
-const resumeUrl = computed(
-  () => profile.value?.resume_url || profile.value?.resume_path || "",
-);
 
 const loadForm = () => {
   form.name = profile.value?.name || "";
@@ -402,7 +404,6 @@ const saveProfile = async () => {
     };
 
     await store.updateProfile(payload);
-    await store.fetchDashboard(true);
   } finally {
     saving.value = false;
   }
@@ -424,14 +425,24 @@ const handleResumeUpload = async (event) => {
 
   try {
     await store.uploadResume(file);
-    await store.fetchDashboard(true);
   } finally {
     event.target.value = "";
   }
 };
 
+const viewResume = async () => {
+  try {
+    const response = await store.downloadResume();
+    const blobUrl = URL.createObjectURL(response.data);
+    window.open(blobUrl, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  } catch (error) {
+    store.error = error?.response?.data?.error || error?.message || "Failed to open resume";
+  }
+};
+
 onMounted(async () => {
-  await Promise.allSettled([store.fetchProfile(), store.fetchDashboard()]);
+  await store.fetchProfile();
 });
 
 watch(

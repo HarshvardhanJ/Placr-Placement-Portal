@@ -15,6 +15,17 @@ from app.utils.decorators import active_required, role_required
 student_api = Blueprint("student_api", __name__)
 
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+RESUME_UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "resumes")
+
+
+def _get_resume_path(student):
+    if not student.resume_path:
+        return None
+    return student.resume_path
+
+
+
 @student_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.student)
 @active_required
@@ -229,6 +240,30 @@ def set_student_profile():
         return jsonify({"error": "Failed to update profile", "details": str(e)}), 500
 
 
+@student_api.route("/profile/resume", methods=["GET"])
+@role_required(UserRoleEnum.student)
+@active_required
+def get_resume():
+    user_id = get_jwt_identity()
+    student = Student.query.filter_by(user_id=user_id).first()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+
+    resume_path = _get_resume_path(student)
+    if not resume_path:
+        return jsonify({"error": "Resume not uploaded"}), 404
+
+    if not os.path.exists(resume_path):
+        return jsonify({"error": "Resume file missing"}), 404
+
+    return send_file(
+        resume_path,
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=f"{student.roll_no}_resume.pdf",
+    )
+
+
 @student_api.route("/profile/resume", methods=["POST"])
 @role_required(UserRoleEnum.student)
 @active_required
@@ -249,9 +284,8 @@ def upload_resume():
         old_resume_path = student.resume_path
         unique_filename = f"{student.student_id}_{uuid.uuid4()}.pdf"
 
-        UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads", "resumes")
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+        filepath = os.path.join(RESUME_UPLOAD_FOLDER, unique_filename)
         resume.save(filepath)
 
         student.resume_path = filepath
@@ -266,6 +300,8 @@ def upload_resume():
             {
                 "message": "Resume uploaded successfully",
                 "resume_path": filepath,
+                "resume_uploaded": True,
+                "resume_filename": os.path.basename(filepath),
             }
         ), 200
     except Exception as e:

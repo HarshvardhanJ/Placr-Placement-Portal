@@ -559,7 +559,11 @@ const resetFilters = () => {
 };
 
 onMounted(async () => {
-  await Promise.allSettled([store.fetchProfile?.(), store.fetchDashboard?.()]);
+  await Promise.allSettled([
+    store.fetchProfile?.(),
+    store.fetchDashboard?.(),
+    store.fetchApplications?.(),
+  ]);
 });
 </script>
 

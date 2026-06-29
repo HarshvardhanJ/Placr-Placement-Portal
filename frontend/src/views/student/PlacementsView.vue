@@ -197,10 +197,10 @@
 
                     <div class="d-flex flex-wrap gap-2">
                       <RouterLink
-                        :to="`/student/drives/${item.drive_id}`"
+                        to="/student/applications"
                         class="btn btn-outline-primary btn-sm"
                       >
-                        View Drive
+                        View Applications
                       </RouterLink>
 
                       <button
@@ -349,6 +349,7 @@ import StudentLayout from "@/layouts/StudentLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
 import StatCard from "@/components/shared/StatCard.vue";
 import { useStudentStore } from "@/stores/studentStore";
+import studentApi from "@/services/studentApi";
 
 const store = useStudentStore();
 const { placements } = storeToRefs(store);
@@ -514,12 +515,27 @@ const resetFilters = () => {
   searchQuery.value = "";
 };
 
-const downloadOfferLetter = (item) => {
-  const a = document.createElement("a");
-  a.href = `/api/student/placements/${item.placement_id}/offer-letter`;
-  a.target = "_blank";
-  a.rel = "noreferrer";
-  a.click();
+const downloadOfferLetter = async (item) => {
+  try {
+    const response = await studentApi.downloadOfferLetter(item.placement_id);
+    const blob = new Blob([response.data], {
+      type: response.headers?.["content-type"] || "application/pdf",
+    });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `offer_letter_${(item.company || "placement")
+      .toString()
+      .replace(/\s+/g, "_")}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    store.error =
+      error?.response?.data?.error || "Failed to download offer letter";
+  }
 };
 
 onMounted(async () => {

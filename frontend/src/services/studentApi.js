@@ -10,6 +10,7 @@ export const studentApi = {
     const { data } = await api.get("/student/profile");
     return data;
   },
+
   async updateProfile(payload) {
     const { data } = await api.put("/student/profile", payload);
     return data;
@@ -28,43 +29,49 @@ export const studentApi = {
     return data;
   },
 
+
+  async downloadResume() {
+    return api.get("/student/profile/resume", {
+      responseType: "blob",
+    });
+  },
+
   async getDrives(search = "") {
-    const data = await api.get("/student/drives", {
+    const { data } = await api.get("/student/drives", {
       params: search ? { search } : undefined,
     });
     return data;
   },
 
   async getDriveById(driveId) {
-    const data = await api.get(`/student/drives/${driveId}`);
+    const { data } = await api.get(`/student/drives/${driveId}`);
     return data;
   },
 
   async applyToDrive(driveId) {
-    const data = await api.get(`/student/drives/${driveId}/apply`);
+    const { data } = await api.post(`/student/drives/${driveId}/apply`);
     return data;
   },
 
   async getApplications() {
-    const data = await api.get("/student/applications");
+    const { data } = await api.get("/student/applications");
     return data;
   },
 
   async getPlacements() {
-    const data = await api.get("/student/placements");
+    const { data } = await api.get("/student/placements");
     return data;
   },
-  async getPlacementsById(placementId) {
-    const data = await api.get(`/student/placements/${placementId}`);
+
+  async getPlacementById(placementId) {
+    const { data } = await api.get(`/student/placements/${placementId}`);
     return data;
   },
 
   async downloadOfferLetter(placementId) {
-    const data = await api.get(
-      `/student/placements/${placementId}/offer-letter`,
-      { responseType: "blob" },
-    );
-    return data;
+    return api.get(`/student/placements/${placementId}/offer-letter`, {
+      responseType: "blob",
+    });
   },
 };
 

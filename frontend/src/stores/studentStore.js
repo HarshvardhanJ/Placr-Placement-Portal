@@ -27,6 +27,9 @@ const normalizeProfile = (profile) => {
   };
 };
 
+const getErrorMessage = (error, fallback) =>
+  error?.response?.data?.error || error?.message || fallback;
+
 export const useStudentStore = defineStore("student", {
   state: () => ({
     dashboard: { ...defaultDashboard },
@@ -53,8 +56,7 @@ export const useStudentStore = defineStore("student", {
     },
 
     studentInitials(state) {
-      const name =
-        state.profile?.name || state.dashboard?.student?.name || "ST";
+      const name = state.profile?.name || state.dashboard?.student?.name || "ST";
       return (
         name
           .split(" ")
@@ -68,16 +70,16 @@ export const useStudentStore = defineStore("student", {
     hasResume(state) {
       return Boolean(
         state.profile?.resume_path ||
-        state.profile?.resume_url ||
-        state.profile?.resume,
+          state.profile?.resume_url ||
+          state.profile?.resume,
       );
     },
 
     profileComplete(state) {
       return Boolean(
         hasValue(state.profile?.department) &&
-        hasValue(state.profile?.cgpa) &&
-        hasValue(state.profile?.year),
+          hasValue(state.profile?.cgpa) &&
+          hasValue(state.profile?.year),
       );
     },
 
@@ -119,8 +121,8 @@ export const useStudentStore = defineStore("student", {
     reportCards(state) {
       const resumeUploaded = Boolean(
         state.profile?.resume_path ||
-        state.profile?.resume_url ||
-        state.profile?.resume,
+          state.profile?.resume_url ||
+          state.profile?.resume,
       );
       const applications = state.dashboard?.counts?.applied || 0;
       const placements = state.dashboard?.counts?.selected || 0;
@@ -205,6 +207,11 @@ export const useStudentStore = defineStore("student", {
       this.placements = [];
       this.error = null;
       this.profileWarning = false;
+      this.loadingDashboard = false;
+      this.loadingProfile = false;
+      this.loadingDrives = false;
+      this.loadingApplications = false;
+      this.loadingPlacements = false;
     },
 
     async bootstrapStudentState() {
@@ -227,10 +234,10 @@ export const useStudentStore = defineStore("student", {
         };
         return data;
       } catch (error) {
-        const message =
-          error?.response?.data?.error ||
-          error?.message ||
-          "Failed to load student dashboard";
+        const message = getErrorMessage(
+          error,
+          "Failed to load student dashboard",
+        );
 
         if (error?.response?.status === 400) {
           this.profileWarning = true;
@@ -255,8 +262,7 @@ export const useStudentStore = defineStore("student", {
         this.profile = normalizeProfile(data);
         return data;
       } catch (error) {
-        this.error =
-          error?.response?.data?.error || "Failed to load student profile";
+        this.error = getErrorMessage(error, "Failed to load student profile");
         throw error;
       } finally {
         this.loadingProfile = false;
@@ -264,31 +270,48 @@ export const useStudentStore = defineStore("student", {
     },
 
     async updateProfile(payload) {
-      const data = await studentApi.updateProfile(payload);
-      this.profile = normalizeProfile(data.student || data);
-      this.error = null;
+      try {
+        const data = await studentApi.updateProfile(payload);
+        this.profile = normalizeProfile(data.student || data);
+        this.error = null;
 
-      if (this.profileComplete) {
-        this.profileWarning = false;
-        await this.fetchDashboard(true);
+        if (this.profileComplete) {
+          this.profileWarning = false;
+          await this.fetchDashboard(true);
+        }
+
+        return data;
+      } catch (error) {
+        this.error = getErrorMessage(error, "Failed to update profile");
+        throw error;
       }
-
-      return data;
     },
 
     async uploadResume(file) {
-      const data = await studentApi.uploadResume(file);
+      try {
+        const data = await studentApi.uploadResume(file);
 
-      if (this.profile) {
+        if (!this.profile) {
+          this.profile = {};
+        }
+
         this.profile.resume_path = data.resume_path || this.profile.resume_path;
+        this.profile.resume_uploaded =
+          data.resume_uploaded ?? Boolean(this.profile.resume_path);
+        this.profile.resume_filename =
+          data.resume_filename || this.profile.resume_filename || null;
+
         if (data.resume_url) this.profile.resume_url = data.resume_url;
-      }
 
-      if (this.profileComplete) {
-        await this.fetchDashboard(true);
-      }
+        if (this.profileComplete) {
+          await this.fetchDashboard(true);
+        }
 
-      return data;
+        return data;
+      } catch (error) {
+        this.error = getErrorMessage(error, "Failed to upload resume");
+        throw error;
+      }
     },
 
     async fetchDrives(search = "") {
@@ -300,11 +323,30 @@ export const useStudentStore = defineStore("student", {
         this.drives = data.drives || [];
         return data;
       } catch (error) {
-        this.error =
-          error?.response?.data?.error || "Failed to load available drives";
+        this.error = getErrorMessage(error, "Failed to load available drives");
         throw error;
       } finally {
         this.loadingDrives = false;
+      }
+    },
+
+    async applyToDrive(driveId) {
+      this.error = null;
+
+      try {
+        const data = await studentApi.applyToDrive(driveId);
+        await Promise.allSettled([
+          this.fetchDashboard(true),
+          this.fetchApplications(),
+          this.fetchDrives(),
+        ]);
+        return data;
+      } catch (error) {
+        if (error?.response?.status === 400) {
+          this.profileWarning = true;
+        }
+        this.error = getErrorMessage(error, "Failed to submit application");
+        throw error;
       }
     },
 
@@ -317,8 +359,7 @@ export const useStudentStore = defineStore("student", {
         this.applications = data.applications || [];
         return data;
       } catch (error) {
-        this.error =
-          error?.response?.data?.error || "Failed to load applications";
+        this.error = getErrorMessage(error, "Failed to load applications");
         throw error;
       } finally {
         this.loadingApplications = false;
@@ -334,12 +375,27 @@ export const useStudentStore = defineStore("student", {
         this.placements = data.placements || [];
         return data;
       } catch (error) {
-        this.error =
-          error?.response?.data?.error || "Failed to load placements";
+        this.error = getErrorMessage(error, "Failed to load placements");
         throw error;
       } finally {
         this.loadingPlacements = false;
       }
+    },
+
+    async fetchDriveById(driveId) {
+      return studentApi.getDriveById(driveId);
+    },
+
+    async fetchPlacementById(placementId) {
+      return studentApi.getPlacementById(placementId);
+    },
+
+    async downloadResume() {
+      return studentApi.downloadResume();
+    },
+
+    async downloadOfferLetter(placementId) {
+      return studentApi.downloadOfferLetter(placementId);
     },
   },
 });
