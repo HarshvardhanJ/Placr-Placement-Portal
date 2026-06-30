@@ -715,8 +715,12 @@ def upload_offer_letter(placement_id):
 
         unique_filename = f"{placement.placement_id}_{uuid.uuid4()}.pdf"
 
+        backend_root = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..")
+        )
+
         upload_folder = os.path.join(
-            os.getcwd(),
+            backend_root,
             "uploads",
             "offer_letters",
         )
