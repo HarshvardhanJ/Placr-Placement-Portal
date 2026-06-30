@@ -25,6 +25,36 @@ def _get_resume_path(student):
     return student.resume_path
 
 
+def normalize_branch_list(value):
+    if not value:
+        return ["ALL"]
+
+    raw = str(value).replace(";", ",").replace("/", ",")
+    branches = [part.strip().upper() for part in raw.split(",") if part.strip()]
+
+    return branches or ["ALL"]
+
+
+def student_is_eligible_for_drive(student, drive):
+    if drive.approval_status != DriveStatusEnum.approved:
+        return False
+
+    if drive.application_deadline <= datetime.utcnow():
+        return False
+
+    if drive.min_cgpa is not None and student.cgpa is not None:
+        if float(student.cgpa) < float(drive.min_cgpa):
+            return False
+
+    if drive.year is not None and student.year is not None:
+        if int(student.year) != int(drive.year):
+            return False
+
+    student_branch = (student.department or "").strip().upper()
+    branches = normalize_branch_list(drive.eligible_branch)
+
+    return "ALL" in branches or student_branch in branches
+
 
 @student_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.student)
@@ -67,13 +97,10 @@ def student_dashboard():
     eligible_drives = []
 
     for drive in open_drives:
-        branches = [
-            branch.strip() for branch in (drive.eligible_branch or "").split(",")
-        ]
-
         if (
-            "ALL" in branches or student.department in branches
-        ) and drive.drive_id not in applied_drive_ids:
+            student_is_eligible_for_drive(student, drive)
+            and drive.drive_id not in applied_drive_ids
+        ):
             eligible_drives.append(drive)
 
     eligible_drives.sort(key=lambda drive: drive.application_deadline)
@@ -355,8 +382,7 @@ def student_apply(id):
     if drive.year is not None and student.year != drive.year:
         return jsonify({"error": f"Only year {drive.year} students can apply"}), 403
 
-    branches = [branch.strip() for branch in (drive.eligible_branch or "").split(",")]
-    if "ALL" not in branches and student.department not in branches:
+    if not student_is_eligible_for_drive(student, drive):
         return jsonify({"error": "You are not eligible for this drive"}), 403
 
     existing_application = Application.query.filter_by(
@@ -468,15 +494,11 @@ def get_available_drives():
     drives = query.all()
 
     eligible_drives = []
-
     for drive in drives:
-        branches = [
-            branch.strip() for branch in (drive.eligible_branch or "").split(",")
-        ]
-
         if (
-            "ALL" in branches or student.department in branches
-        ) and drive.drive_id not in applied_drive_ids:
+            student_is_eligible_for_drive(student, drive)
+            and drive.drive_id not in applied_drive_ids
+        ):
             eligible_drives.append(drive)
 
     eligible_drives.sort(key=lambda drive: drive.application_deadline)

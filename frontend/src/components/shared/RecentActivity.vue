@@ -1,7 +1,7 @@
 <template>
-  <div class="card shadow-sm">
-    <div class="card-header">
-      <h3 class="card-title">
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+    <div class="card-header bg-white border-bottom-0 px-4 pt-4 pb-3">
+      <h3 class="card-title mb-0 fw-semibold">
         {{ title }}
       </h3>
     </div>
@@ -19,8 +19,8 @@
             style="width: 10px; height: 10px; margin-top: 8px"
           />
 
-          <div>
-            <div class="fw-medium">
+          <div style="min-width: 0">
+            <div class="fw-medium text-truncate">
               {{ activity.message }}
             </div>
 

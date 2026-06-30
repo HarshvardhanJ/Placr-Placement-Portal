@@ -33,11 +33,11 @@ defineProps({
 
 <style scoped>
 .stat-card {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 16px;
-  padding: 1rem 1.1rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+  border: 1px solid #e9eef5;
+  border-radius: 18px;
+  padding: 1.05rem 1.15rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
   height: 100%;
 }
 
@@ -45,40 +45,40 @@ defineProps({
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.9rem;
 }
 
 .stat-label {
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6b7280;
-  margin-bottom: 0.35rem;
-  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 0.45rem;
+  font-weight: 800;
 }
 
 .stat-value {
-  font-size: 1.6rem;
+  font-size: 1.9rem;
   font-weight: 800;
-  color: #1f2937;
-  line-height: 1.1;
+  color: #111827;
+  line-height: 1.05;
 }
 
 .stat-delta {
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #0d6efd;
+  color: #2563eb;
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
 .stat-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #eef4ff;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0ecff, #eef4ff);
   color: #0d6efd;
   display: flex;
   align-items: center;

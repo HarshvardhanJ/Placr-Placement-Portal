@@ -65,7 +65,7 @@
                 v-model="searchQuery"
                 type="text"
                 class="form-control border-0 shadow-none"
-                placeholder="Search by company, role, or industry..."
+                placeholder="Search by company, role, or location..."
               />
             </div>
           </div>
@@ -101,7 +101,7 @@
       </template>
 
       <template #actions="{ row }">
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
           <button
             class="btn btn-sm btn-outline-primary"
             @click="viewDrive(row)"
@@ -159,8 +159,8 @@
               </div>
 
               <div class="col-md-6">
-                <label class="text-secondary">Industry</label>
-                <div class="fw-medium">{{ selectedDrive?.industry }}</div>
+                <label class="text-secondary">Location</label>
+                <div class="fw-medium">{{ selectedDrive?.location }}</div>
               </div>
 
               <div class="col-md-6">
@@ -183,9 +183,53 @@
                 <div class="fw-medium">{{ selectedDrive?.status }}</div>
               </div>
 
+              <div class="col-md-6">
+                <label class="text-secondary">Eligible Branches</label>
+                <div class="fw-medium">
+                  {{ selectedDrive?.eligible_branch || "All branches" }}
+                </div>
+              </div>
+
               <div class="col-12">
                 <label class="text-secondary">Description</label>
-                <div class="fw-medium">{{ selectedDrive?.description }}</div>
+                <div class="fw-medium">
+                  {{ selectedDrive?.description || "No description provided." }}
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="text-secondary">Requirements</label>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge text-bg-light border"
+                    >CGPA ≥ {{ selectedDrive?.min_cgpa ?? "—" }}</span
+                  >
+                  <span class="badge text-bg-light border"
+                    >Openings: {{ selectedDrive?.no_openings ?? "—" }}</span
+                  >
+                  <span class="badge text-bg-light border"
+                    >Salary: {{ formatCurrency(selectedDrive?.salary) }}</span
+                  >
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="text-secondary"
+                  >Skills / Experience / Benefits</label
+                >
+                <div class="small text-secondary mt-1">
+                  <div>
+                    <strong>Skills:</strong>
+                    {{ selectedDrive?.required_skills || "—" }}
+                  </div>
+                  <div>
+                    <strong>Experience:</strong>
+                    {{ selectedDrive?.experience_required || "—" }}
+                  </div>
+                  <div>
+                    <strong>Benefits:</strong>
+                    {{ selectedDrive?.benefits || "—" }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -232,15 +276,21 @@ const loadDrives = async () => {
       role: drive.job_title,
       deadline: new Date(drive.application_deadline).toLocaleDateString(),
 
-      applicants: 0,
+      applicants: drive.applicants ?? 0,
 
       status:
         drive.approval_status.charAt(0).toUpperCase() +
         drive.approval_status.slice(1),
 
       description: drive.job_description,
-
-      industry: drive.job_location,
+      location: drive.job_location,
+      eligible_branch: drive.eligible_branch,
+      min_cgpa: drive.min_cgpa,
+      no_openings: drive.no_openings,
+      salary: drive.salary,
+      required_skills: drive.required_skills,
+      experience_required: drive.experience_required,
+      benefits: drive.benefits,
     }));
   } catch (error) {
     console.error("Failed to load drives:", error);
@@ -282,7 +332,9 @@ const filteredDrives = computed(() => {
     const matchesSearch =
       drive.company.toLowerCase().includes(query) ||
       drive.role.toLowerCase().includes(query) ||
-      drive.industry.toLowerCase().includes(query);
+      (drive.location || drive.job_location || "")
+        .toLowerCase()
+        .includes(query);
 
     const matchesStatus =
       !statusFilter.value || drive.status.toLowerCase() === statusFilter.value;
@@ -294,6 +346,13 @@ const filteredDrives = computed(() => {
 const clearFilters = () => {
   searchQuery.value = "";
   statusFilter.value = "";
+};
+
+const formatCurrency = (value) => {
+  if (value === null || value === undefined || value === "") return "—";
+  const num = Number(value);
+  if (Number.isNaN(num)) return String(value);
+  return `₹${num.toLocaleString("en-IN")}`;
 };
 
 const statusBadgeClass = (status) => {

@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, watch, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
 
@@ -275,4 +275,18 @@ onMounted(() => {
     router.replace({ path: "/company/drives" });
   }
 });
+
+watch(
+  () => route.query.new,
+  (value) => {
+    if (value === "1") {
+      openCreateModal();
+
+      router.replace({ query: {} });
+    }
+    {
+      immediate: true;
+    }
+  },
+);
 </script>

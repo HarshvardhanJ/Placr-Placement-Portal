@@ -61,6 +61,26 @@
         <i class="ti ti-file-text"></i>
         <span>Applications</span>
       </RouterLink>
+
+      <RouterLink
+        to="/admin/analytics"
+        class="sidebar-link"
+        active-class="is-active"
+        exact-active-class="is-active"
+      >
+        <i class="ti ti-chart-bar"></i>
+        <span>Analytics</span>
+      </RouterLink>
+
+      <RouterLink
+        to="/admin/reports"
+        class="sidebar-link"
+        active-class="is-active"
+        exact-active-class="is-active"
+      >
+        <i class="ti ti-report-analytics"></i>
+        <span>Reports</span>
+      </RouterLink>
     </nav>
 
     <div class="sidebar-divider"></div>

@@ -16,7 +16,10 @@
             :disabled="applying"
             @click="handleApply"
           >
-            <span v-if="applying" class="spinner-border spinner-border-sm me-2"></span>
+            <span
+              v-if="applying"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
             Apply Now
           </button>
         </div>
@@ -35,7 +38,9 @@
       <div class="drive-detail-shell">
         <div class="drive-hero card shadow-sm border-0 mb-4">
           <div class="card-body p-4 p-lg-5">
-            <div class="d-flex flex-column flex-lg-row gap-4 justify-content-between">
+            <div
+              class="d-flex flex-column flex-lg-row gap-4 justify-content-between"
+            >
               <div class="flex-grow-1">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                   <span class="hero-kicker">Placement Drive</span>
@@ -46,8 +51,8 @@
 
                 <h3 class="fw-bold mb-2">{{ drive.job_title }}</h3>
                 <p class="text-muted mb-3">
-                  {{ drive.company_name || 'Company' }} ·
-                  {{ drive.job_location || 'Location not specified' }}
+                  {{ drive.company_name || "Company" }} ·
+                  {{ drive.job_location || "Location not specified" }}
                 </p>
 
                 <div class="d-flex flex-wrap gap-2">
@@ -61,7 +66,8 @@
                     <i class="ti ti-user-check me-1"></i>{{ eligibilityLabel }}
                   </span>
                   <span class="meta-item">
-                    <i class="ti ti-users me-1"></i>{{ drive.applicants ?? 0 }} applicants
+                    <i class="ti ti-users me-1"></i
+                    >{{ drive.applicants ?? 0 }} applicants
                   </span>
                 </div>
               </div>
@@ -69,7 +75,9 @@
               <div class="company-card">
                 <div class="company-avatar">{{ companyInitials }}</div>
                 <div>
-                  <div class="fw-semibold">{{ drive.company_name || 'Company' }}</div>
+                  <div class="fw-semibold">
+                    {{ drive.company_name || "Company" }}
+                  </div>
                   <small class="text-muted">Approved placement drive</small>
                 </div>
               </div>
@@ -83,7 +91,7 @@
               <div class="card-body p-4">
                 <h6 class="fw-semibold mb-3">Job description</h6>
                 <p class="text-muted mb-0">
-                  {{ drive.job_description || 'No job description provided.' }}
+                  {{ drive.job_description || "No job description provided." }}
                 </p>
               </div>
             </div>
@@ -97,19 +105,22 @@
                       <div class="detail-item">
                         <div class="detail-label">Required skills</div>
                         <div class="detail-value">
-                          {{ drive.required_skills || 'Not specified' }}
+                          {{ drive.required_skills || "Not specified" }}
                         </div>
                       </div>
                       <div class="detail-item">
                         <div class="detail-label">Experience</div>
                         <div class="detail-value">
-                          {{ drive.experience_required || 'Not specified' }}
+                          {{
+                            `${drive.experience_required} Year` ||
+                            "Not specified"
+                          }}
                         </div>
                       </div>
                       <div class="detail-item">
                         <div class="detail-label">Eligible branches</div>
                         <div class="detail-value">
-                          {{ drive.eligible_branch || 'All branches' }}
+                          {{ drive.eligible_branch || "All branches" }}
                         </div>
                       </div>
                     </div>
@@ -125,25 +136,25 @@
                       <div class="detail-item">
                         <div class="detail-label">No. of openings</div>
                         <div class="detail-value">
-                          {{ drive.no_openings ?? '—' }}
+                          {{ drive.no_openings ?? "—" }}
                         </div>
                       </div>
                       <div class="detail-item">
                         <div class="detail-label">Minimum CGPA</div>
                         <div class="detail-value">
-                          {{ drive.min_cgpa ?? 'Any' }}
+                          {{ drive.min_cgpa ?? "Any" }}
                         </div>
                       </div>
                       <div class="detail-item">
                         <div class="detail-label">Eligible year</div>
                         <div class="detail-value">
-                          {{ drive.year ?? 'Any' }}
+                          {{ drive.year ?? "Any" }}
                         </div>
                       </div>
                       <div class="detail-item">
                         <div class="detail-label">Benefits</div>
                         <div class="detail-value">
-                          {{ drive.benefits || 'Not specified' }}
+                          {{ drive.benefits || "Not specified" }}
                         </div>
                       </div>
                     </div>
@@ -152,7 +163,10 @@
               </div>
             </div>
 
-            <div v-if="drive.required_skills" class="card shadow-sm border-0 mt-4">
+            <div
+              v-if="drive.required_skills"
+              class="card shadow-sm border-0 mt-4"
+            >
               <div class="card-body p-4">
                 <h6 class="fw-semibold mb-3">Skill tags</h6>
                 <div class="d-flex flex-wrap gap-2">
@@ -174,7 +188,9 @@
                 <h6 class="fw-semibold mb-3">Application status</h6>
 
                 <div class="status-box">
-                  <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div
+                    class="d-flex align-items-center justify-content-between mb-3"
+                  >
                     <span class="small text-muted">Current status</span>
                     <span class="status-badge" :class="statusClass">
                       {{ statusLabel }}
@@ -193,10 +209,17 @@
                       :disabled="applying"
                       @click="handleApply"
                     >
-                      <span v-if="applying" class="spinner-border spinner-border-sm me-2"></span>
+                      <span
+                        v-if="applying"
+                        class="spinner-border spinner-border-sm me-2"
+                      ></span>
                       Apply Now
                     </button>
-                    <RouterLink v-else to="/student/applications" class="btn btn-outline-primary">
+                    <RouterLink
+                      v-else
+                      to="/student/applications"
+                      class="btn btn-outline-primary"
+                    >
                       View Applications
                     </RouterLink>
                   </div>
@@ -208,13 +231,20 @@
               <div class="card-body p-4">
                 <h6 class="fw-semibold mb-2">Need to prepare?</h6>
                 <p class="text-muted small mb-3">
-                  Keep your profile complete before applying so eligibility checks pass smoothly.
+                  Keep your profile complete before applying so eligibility
+                  checks pass smoothly.
                 </p>
                 <div class="d-flex flex-wrap gap-2">
-                  <RouterLink to="/student/profile" class="btn btn-outline-primary btn-sm">
+                  <RouterLink
+                    to="/student/profile"
+                    class="btn btn-outline-primary btn-sm"
+                  >
                     Update Profile
                   </RouterLink>
-                  <RouterLink to="/student/interviews" class="btn btn-outline-secondary btn-sm">
+                  <RouterLink
+                    to="/student/interviews"
+                    class="btn btn-outline-secondary btn-sm"
+                  >
                     Interviews
                   </RouterLink>
                 </div>
@@ -228,7 +258,9 @@
     <div v-else class="card shadow-sm border-0 p-5 text-center">
       <i class="ti ti-briefcase-off display-5 text-muted mb-3"></i>
       <h5 class="fw-semibold mb-2">Drive not found</h5>
-      <p class="text-muted mb-0">This drive may have been removed or is not approved yet.</p>
+      <p class="text-muted mb-0">
+        This drive may have been removed or is not approved yet.
+      </p>
     </div>
   </StudentLayout>
 </template>
@@ -268,9 +300,7 @@ const loadDrive = async () => {
 
 const profileComplete = computed(() =>
   Boolean(
-    profile.value?.department &&
-      profile.value?.cgpa &&
-      profile.value?.year,
+    profile.value?.department && profile.value?.cgpa && profile.value?.year,
   ),
 );
 
@@ -308,7 +338,8 @@ const deadlineLabel = computed(() => {
 
 const salaryLabel = computed(() => {
   const salary = drive.value?.salary;
-  if (salary === null || salary === undefined || salary === "") return "Salary not shared";
+  if (salary === null || salary === undefined || salary === "")
+    return "Salary not shared";
   const num = Number(salary);
   return Number.isNaN(num) ? String(salary) : `₹${num.toLocaleString("en-IN")}`;
 });
@@ -401,7 +432,11 @@ const handleApply = async () => {
 };
 
 onMounted(async () => {
-  await Promise.allSettled([store.fetchProfile(), store.fetchDashboard(), loadDrive()]);
+  await Promise.allSettled([
+    store.fetchProfile(),
+    store.fetchDashboard(),
+    loadDrive(),
+  ]);
 });
 
 watch(

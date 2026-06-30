@@ -1,7 +1,10 @@
 <template>
   <DataTable title="Active Job Drives" :headers="headers" :rows="drives">
     <template #header-actions>
-      <RouterLink to="/company/drives" class="btn btn-link btn-sm text-decoration-none">
+      <RouterLink
+        to="/company/drives"
+        class="btn btn-link btn-sm text-decoration-none"
+      >
         View All
       </RouterLink>
     </template>
@@ -9,9 +12,11 @@
     <template #role="{ row }">
       <div class="d-flex align-items-center gap-3">
         <div class="drive-avatar">{{ initialLetter(row.job_title) }}</div>
-        <div>
-          <div class="fw-semibold">{{ row.job_title }}</div>
-          <small class="text-muted">{{ row.company_name }}</small>
+        <div style="min-width: 0">
+          <div class="fw-semibold text-truncate">{{ row.job_title }}</div>
+          <small class="text-muted text-truncate d-block">{{
+            row.company_name
+          }}</small>
         </div>
       </div>
     </template>
@@ -27,18 +32,20 @@
     </template>
 
     <template #row_actions="{ row }">
-      <RouterLink
-        :to="`/company/drives/${row.drive_id}`"
-        class="btn btn-sm btn-outline-dark"
-      >
-        Open
-      </RouterLink>
-      <RouterLink
-        :to="`/company/applications?drive=${row.drive_id}`"
-        class="btn btn-sm btn-outline-primary"
-      >
-        Applicants
-      </RouterLink>
+      <div class="d-flex flex-wrap justify-content-end gap-2">
+        <RouterLink
+          :to="`/company/drives/${row.drive_id}`"
+          class="btn btn-sm btn-outline-dark"
+        >
+          Open
+        </RouterLink>
+        <RouterLink
+          :to="`/company/applications?drive=${row.drive_id}`"
+          class="btn btn-sm btn-outline-primary"
+        >
+          Applicants
+        </RouterLink>
+      </div>
     </template>
   </DataTable>
 </template>
@@ -73,7 +80,8 @@ const displayStatus = (status = "") => {
 };
 
 const statusBadgeClass = (status = "") => {
-  if (status === "shortlisting") return "bg-warning-subtle text-warning-emphasis";
+  if (status === "shortlisting")
+    return "bg-warning-subtle text-warning-emphasis";
   if (status === "interviewing") return "bg-primary-subtle text-primary";
   if (status === "active") return "bg-success-subtle text-success";
   return "bg-light text-muted border";
@@ -82,10 +90,10 @@ const statusBadgeClass = (status = "") => {
 
 <style scoped>
 .drive-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: #eef2f7;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eef2f7, #e0e7ff);
   color: #4b5563;
   font-weight: 600;
   display: inline-flex;

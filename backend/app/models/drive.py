@@ -44,14 +44,22 @@ class Drive(db.Model):
 
     def to_dict(self):
         return {
-            "company_name": self.company.name,
+            "company_name": self.company.name if self.company else None,
             "drive_id": self.drive_id,
             "company_id": self.company_id,
             "job_title": self.job_title,
             "job_description": self.job_description,
             "job_location": self.job_location,
-            "application_deadline": str(self.application_deadline),
+            "application_deadline": self.application_deadline.isoformat()
+            if self.application_deadline
+            else None,
             "applicants": len(self.applications),
+            "eligible_branch": (
+                "All branches"
+                if not self.eligible_branch
+                or self.eligible_branch.strip().upper() == "ALL"
+                else self.eligible_branch
+            ),
             "min_cgpa": self.min_cgpa,
             "required_skills": self.required_skills,
             "experience_required": self.experience_required,
@@ -60,5 +68,5 @@ class Drive(db.Model):
             "year": self.year,
             "no_openings": self.no_openings,
             "salary": self.salary,
-            "created_at": str(self.created_at),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

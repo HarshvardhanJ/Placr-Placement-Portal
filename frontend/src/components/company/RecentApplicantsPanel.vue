@@ -19,11 +19,16 @@
               <small class="text-muted">{{ applicant.job_title }}</small>
             </div>
           </div>
-          <small class="text-muted text-nowrap">{{ timeAgo(applicant.application_date) }}</small>
+          <small class="text-muted text-nowrap">{{
+            timeAgo(applicant.application_date)
+          }}</small>
         </div>
 
         <div class="d-flex align-items-center justify-content-between mt-2">
-          <span class="badge rounded-pill" :class="statusBadgeClass(applicant.status)">
+          <span
+            class="badge rounded-pill"
+            :class="statusBadgeClass(applicant.status)"
+          >
             {{ applicant.status }}
           </span>
 
@@ -38,9 +43,7 @@
         </div>
       </div>
 
-      <div v-if="!applicants.length" class="empty-state">
-        No applicants yet
-      </div>
+      <div v-if="!applicants.length" class="empty-state">No applicants yet</div>
 
       <RouterLink
         to="/company/applications"
@@ -83,7 +86,8 @@ const timeAgo = (value) => {
 };
 
 const statusBadgeClass = (status = "") => {
-  if (status === "shortlisted") return "bg-warning-subtle text-warning-emphasis";
+  if (status === "shortlisted")
+    return "bg-warning-subtle text-warning-emphasis";
   if (status === "selected") return "bg-success-subtle text-success";
   if (status === "rejected") return "bg-danger-subtle text-danger";
   return "bg-light text-muted border";

@@ -45,5 +45,5 @@ class Company(db.Model):
             "industry": self.industry,
             "description": self.description,
             "location": self.location,
-            "created_at": str(self.created_at),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

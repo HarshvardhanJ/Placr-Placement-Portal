@@ -1,6 +1,6 @@
 <template>
-  <div class="card shadow-sm h-100 border-0">
-    <div class="card-header bg-white">
+  <div class="card shadow-sm h-100 border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-bottom-0 px-4 pt-4 pb-3">
       <h5 class="mb-0 fw-semibold">
         {{ title }}
       </h5>
@@ -9,17 +9,20 @@
     <div class="card-body p-0">
       <div v-if="items.length">
         <div v-for="item in items" :key="item.title" class="action-item">
-          <div>
-            <div class="fw-semibold">
+          <div style="min-width: 0">
+            <div class="fw-semibold text-truncate">
               {{ item.title }}
             </div>
 
-            <small class="text-secondary">
+            <small class="text-secondary text-truncate d-block">
               {{ item.subtitle }}
             </small>
           </div>
 
-          <RouterLink :to="item.link" class="btn btn-sm btn-outline-primary">
+          <RouterLink
+            :to="item.link"
+            class="btn btn-sm btn-outline-primary flex-shrink-0"
+          >
             View
           </RouterLink>
         </div>
@@ -27,7 +30,7 @@
 
       <div v-else class="empty-state">
         <i class="ti ti-check text-success fs-3 mb-2"></i>
-        <div>No pending actions</div>
+        <div class="fw-semibold">No pending actions</div>
       </div>
     </div>
   </div>
@@ -48,7 +51,8 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid #eef2f7;
 }
 

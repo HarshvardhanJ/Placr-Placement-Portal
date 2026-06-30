@@ -1,13 +1,19 @@
 <template>
   <div v-if="show" class="modal d-block" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div
+      class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+    >
       <div class="modal-content border-0 shadow">
         <div class="modal-header">
           <div>
             <h5 class="modal-title mb-1">{{ modalTitle }}</h5>
             <small class="text-secondary">{{ modalSubtitle }}</small>
           </div>
-          <button type="button" class="btn-close" @click="$emit('close')"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="$emit('close')"
+          ></button>
         </div>
 
         <form @submit.prevent="handleSubmit">
@@ -16,7 +22,10 @@
 
             <div class="row g-3">
               <div class="col-md-8">
-                <label class="form-label">Job Title <span v-if="!readOnly" class="text-danger">*</span></label>
+                <label class="form-label"
+                  >Job Title
+                  <span v-if="!readOnly" class="text-danger">*</span></label
+                >
                 <input
                   v-model="form.job_title"
                   type="text"
@@ -50,13 +59,16 @@
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Application Deadline <span v-if="!readOnly" class="text-danger">*</span></label>
-                <input
+                <label class="form-label"
+                  >Application Deadline
+                  <span v-if="!readOnly" class="text-danger">*</span></label
+                >
+                <VueDatePicker
                   v-model="form.application_deadline"
-                  type="date"
-                  class="form-control"
-                  :readonly="readOnly"
-                  required
+                  :time-config="{ enableTimePicker: false }"
+                  format="dd/MM/yyyy"
+                  model-type="yyyy-MM-dd"
+                  :disabled="readOnly"
                 />
               </div>
 
@@ -154,7 +166,10 @@
               <div v-if="drive" class="col-12">
                 <label class="text-secondary">Status</label>
                 <div>
-                  <span class="badge rounded-pill" :class="statusBadgeClass(drive.approval_status)">
+                  <span
+                    class="badge rounded-pill"
+                    :class="statusBadgeClass(drive.approval_status)"
+                  >
                     {{ formatStatus(drive.approval_status) }}
                   </span>
                 </div>
@@ -163,11 +178,22 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="$emit('close')">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="$emit('close')"
+            >
               {{ readOnly ? "Close" : "Cancel" }}
             </button>
-            <button v-if="!readOnly" type="submit" class="btn btn-primary" :disabled="saving">
-              {{ saving ? "Saving..." : drive ? "Save Changes" : "Create Drive" }}
+            <button
+              v-if="!readOnly"
+              type="submit"
+              class="btn btn-primary"
+              :disabled="saving"
+            >
+              {{
+                saving ? "Saving..." : drive ? "Save Changes" : "Create Drive"
+              }}
             </button>
           </div>
         </form>
@@ -181,6 +207,8 @@
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import api from "@/services/api";
+import { VueDatePicker } from "@vuepic/vue-datepicker";
+import "@vuepic/vue-datepicker/dist/main.css";
 
 const props = defineProps({
   show: {
@@ -245,7 +273,10 @@ const populateForm = () => {
     form.job_title = props.drive.job_title || "";
     form.job_location = props.drive.job_location || "";
     form.job_description = props.drive.job_description || "";
-    form.application_deadline = (props.drive.application_deadline || "").slice(0, 10);
+    form.application_deadline = (props.drive.application_deadline || "").slice(
+      0,
+      10,
+    );
     form.eligible_branch = props.drive.eligible_branch || "";
     form.min_cgpa = props.drive.min_cgpa ?? null;
     form.year = props.drive.year ?? null;
@@ -260,9 +291,12 @@ const populateForm = () => {
   }
 };
 
-watch(() => props.show, (value) => {
-  if (value) populateForm();
-});
+watch(
+  () => props.show,
+  (value) => {
+    if (value) populateForm();
+  },
+);
 
 const statusBadgeClass = (status) => {
   switch (status) {

@@ -108,10 +108,6 @@
                   </div>
                 </div>
                 <div class="summary-item">
-                  <div class="summary-label">Profile visibility</div>
-                  <div class="summary-value">{{ profileVisibility }}</div>
-                </div>
-                <div class="summary-item">
                   <div class="summary-label">Resume</div>
                   <div class="summary-value">
                     {{ hasResume ? "Uploaded" : "Missing" }}
@@ -196,14 +192,6 @@ const defaults = [
     label: "Deadline reminders",
     description: "Receive reminders before application deadlines close.",
     icon: "ti-bell",
-    enabled: true,
-  },
-  {
-    key: "profileVisibility",
-    label: "Profile visibility",
-    description:
-      "Allow recruiters to view your profile details during placements.",
-    icon: "ti-shield-check",
     enabled: true,
   },
   {

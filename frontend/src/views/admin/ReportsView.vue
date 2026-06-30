@@ -1,0 +1,98 @@
+<template>
+  <DashboardLayout>
+    <PageHeader
+      title="Reports"
+      subtitle="Export-ready summaries and downloadable insights."
+    >
+      <template #actions>
+        <RouterLink to="/admin/analytics" class="btn btn-outline-primary">
+          <i class="ti ti-chart-bar me-2"></i>Analytics
+        </RouterLink>
+      </template>
+    </PageHeader>
+
+    <div class="reports-shell">
+      <div class="reports-banner">
+        <div class="eyebrow mb-2">Report center</div>
+        <h3 class="fw-bold mb-2">
+          Placeholders are ready for CSV, PDF, and placement summaries.
+        </h3>
+        <p class="text-secondary mb-0">
+          You can wire this screen to monthly exports, shortlist summaries, and
+          company-wise reports later.
+        </p>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-md-4" v-for="item in items" :key="item.title">
+          <div class="report-card shadow-sm">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="fw-semibold">{{ item.title }}</div>
+              <i :class="item.icon" class="ti fs-4 text-primary"></i>
+            </div>
+            <div class="text-secondary small">{{ item.note }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </DashboardLayout>
+</template>
+
+<script setup>
+import DashboardLayout from "@/layouts/DashboardLayout.vue";
+import PageHeader from "@/components/shared/PageHeader.vue";
+
+const items = [
+  {
+    title: "Monthly Placement Report",
+    note: "Company-wise and branch-wise summary",
+    icon: "ti-file-report",
+  },
+  {
+    title: "Drive Export",
+    note: "Approved, pending, and closed drives",
+    icon: "ti-download",
+  },
+  {
+    title: "Applications Export",
+    note: "Status-wise application batches",
+    icon: "ti-file-text",
+  },
+];
+</script>
+
+<style scoped>
+.reports-shell {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.reports-banner {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #e9eef5;
+  border-radius: 22px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  background: #eef4ff;
+  color: #2563eb;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.report-card {
+  background: #fff;
+  border: 1px solid #e9eef5;
+  border-radius: 18px;
+  padding: 1.25rem;
+  height: 100%;
+}
+</style>

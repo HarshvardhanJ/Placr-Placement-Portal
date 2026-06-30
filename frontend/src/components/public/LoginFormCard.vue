@@ -3,11 +3,7 @@
     class="login-panel d-flex flex-column align-items-center justify-content-center bg-white h-100 px-3 px-lg-0"
   >
     <div class="mb-4">
-      <img
-        :src="placrLogo"
-        alt="PLACR"
-        class="login-logo rounded-3"
-      />
+      <img :src="placrLogo" alt="PLACR" class="login-logo rounded-3" />
     </div>
 
     <div class="login-card card shadow-sm w-100">
@@ -56,7 +52,7 @@
 
         <div class="text-center mt-4">
           Don't have an account?
-          <RouterLink to="/register/student">Create Account</RouterLink>
+          <RouterLink to="/register">Create Account</RouterLink>
         </div>
       </div>
     </div>

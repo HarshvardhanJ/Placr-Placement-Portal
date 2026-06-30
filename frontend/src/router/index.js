@@ -10,6 +10,8 @@ import AdminCompaniesView from "@/views/admin/CompaniesView.vue";
 import AdminStudentsView from "@/views/admin/StudentsView.vue";
 import AdminDrivesView from "@/views/admin/DrivesView.vue";
 import AdminApplicationsView from "@/views/admin/ApplicationsView.vue";
+import AdminAnalyticsView from "@/views/admin/AnalyticsView.vue";
+import AdminReportsView from "@/views/admin/ReportsView.vue";
 import CompanyDashboardView from "@/views/company/DashboardView.vue";
 import CompanyDrivesView from "@/views/company/DrivesView.vue";
 import CompanyApplicationsView from "@/views/company/ApplicationsView.vue";
@@ -20,6 +22,7 @@ import CompanyPlacementsView from "@/views/company/PlacementsView.vue";
 import CompanyDriveDetailsView from "@/views/company/DriveDetailsView.vue";
 import StudentDashboardView from "@/views/student/DashboardView.vue";
 import StudentJobsView from "@/views/student/JobsView.vue";
+import StudentDriveDetailsView from "@/views/student/DriveDetailsView.vue";
 import StudentApplicationsView from "@/views/student/ApplicationsView.vue";
 import StudentInterviewsView from "@/views/student/InterviewsView.vue";
 import StudentPlacementsView from "@/views/student/PlacementsView.vue";
@@ -78,6 +81,16 @@ const routes = [
     name: "admin-application-dashboard",
     component: AdminApplicationsView,
   },
+  {
+    path: "/admin/analytics",
+    name: "admin-analytics-dashboard",
+    component: AdminAnalyticsView,
+  },
+  {
+    path: "/admin/reports",
+    name: "admin-reports-dashboard",
+    component: AdminReportsView,
+  },
   // COMPANY ROUTES
   {
     path: "/company",
@@ -129,6 +142,11 @@ const routes = [
     path: "/student/drives",
     name: "student-drives",
     component: StudentJobsView,
+  },
+  {
+    path: "/student/drives/:id",
+    name: "student-drive-details",
+    component: StudentDriveDetailsView,
   },
   {
     path: "/student/applications",

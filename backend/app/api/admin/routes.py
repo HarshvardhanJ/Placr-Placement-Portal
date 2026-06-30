@@ -122,6 +122,7 @@ def admin_companies():
         user = User.query.filter_by(user_id=c.user_id).first()
         data = c.to_dict()
         data["is_active"] = user.is_active
+        data["drives"] = len(c.drives)
         result.append(data)
     return jsonify(result), 200
 

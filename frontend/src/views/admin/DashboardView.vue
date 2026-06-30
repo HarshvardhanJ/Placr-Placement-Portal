@@ -2,30 +2,47 @@
   <DashboardLayout>
     <PageHeader title="Dashboard" subtitle="Everything you need at a glance.">
       <template #actions>
-        <button
-          type="button"
-          class="btn btn-primary d-inline-flex align-items-center gap-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-            <path d="M7 11l5 5l5 -5" />
-            <path d="M12 4l0 12" />
-          </svg>
-          <span>Export</span>
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+          <RouterLink to="/admin/companies" class="btn btn-outline-primary">
+            Companies
+          </RouterLink>
+          <RouterLink to="/admin/drives" class="btn btn-primary">
+            <i class="ti ti-briefcase me-2"></i>View Drives
+          </RouterLink>
+        </div>
       </template>
     </PageHeader>
+
+    <div class="admin-hero shadow-sm mb-4">
+      <div>
+        <div class="eyebrow mb-2">Placement cell overview</div>
+        <h3 class="fw-bold mb-2">
+          Approve faster, track activity, and keep your pipeline moving.
+        </h3>
+        <p class="text-secondary mb-0">
+          A single workspace for students, companies, drives, and applications.
+        </p>
+      </div>
+
+      <div class="hero-links">
+        <RouterLink to="/admin/companies" class="hero-link">
+          <i class="ti ti-building"></i>
+          <span>Companies</span>
+        </RouterLink>
+        <RouterLink to="/admin/students" class="hero-link">
+          <i class="ti ti-users"></i>
+          <span>Students</span>
+        </RouterLink>
+        <RouterLink to="/admin/analytics" class="hero-link">
+          <i class="ti ti-chart-bar"></i>
+          <span>Analytics</span>
+        </RouterLink>
+        <RouterLink to="/admin/reports" class="hero-link">
+          <i class="ti ti-report-analytics"></i>
+          <span>Reports</span>
+        </RouterLink>
+      </div>
+    </div>
 
     <div class="row g-3 mb-4">
       <div
@@ -62,7 +79,7 @@
         >
           <template #approval_status="{ row }">
             <span
-              class="badge"
+              class="badge rounded-pill"
               :class="{
                 'text-bg-success': row.approval_status === 'approved',
                 'text-bg-warning': row.approval_status === 'pending',
@@ -149,3 +166,79 @@ onMounted(() => {
   loadDashboard();
 });
 </script>
+
+<style scoped>
+.admin-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #e9eef5;
+  border-radius: 22px;
+  padding: 1.35rem 1.5rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  background: #eef4ff;
+  color: #2563eb;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  min-width: 260px;
+}
+
+.hero-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e9eef5;
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.hero-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  border-color: #cfe0ff;
+}
+
+@media (max-width: 991.98px) {
+  .admin-hero {
+    flex-direction: column;
+  }
+
+  .hero-links {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-links {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

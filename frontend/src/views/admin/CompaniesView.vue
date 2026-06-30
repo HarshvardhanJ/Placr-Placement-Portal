@@ -30,6 +30,34 @@
       </template>
     </PageHeader>
 
+    <div class="admin-hero shadow-sm mb-4">
+      <div>
+        <div class="eyebrow mb-2">Company registry</div>
+        <h3 class="fw-bold mb-2">
+          Review approvals, spot active companies, and keep the record clean.
+        </h3>
+        <p class="text-secondary mb-0">
+          Manage company status, inspect their profile details, and quickly
+          check how many drives each one has created.
+        </p>
+      </div>
+
+      <div class="hero-metrics">
+        <div class="mini-metric">
+          <span>Companies</span>
+          <strong>{{ stats[0].value }}</strong>
+        </div>
+        <div class="mini-metric">
+          <span>Pending</span>
+          <strong>{{ stats[1].value }}</strong>
+        </div>
+        <div class="mini-metric">
+          <span>Approved</span>
+          <strong>{{ stats[2].value }}</strong>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-3 mb-4">
       <div
         v-for="stat in stats"
@@ -100,7 +128,7 @@
       </template>
 
       <template #actions="{ row }">
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
           <button
             class="btn btn-sm btn-outline-primary"
             @click="viewCompany(row)"
@@ -278,7 +306,9 @@ const approveCompany = async (company) => {
 const rejectCompany = async (company) => {
   try {
     await api.put(`/admin/companies/${company.company_id}/reject`);
-    companies.value = companies.value.filter((c) => c.id !== company.id);
+    companies.value = companies.value.filter(
+      (c) => c.company_id !== company.company_id,
+    );
   } catch (err) {
     console.error(err);
   }
@@ -328,5 +358,69 @@ onMounted(() => {
 .search-icon {
   color: #6b7280;
   flex-shrink: 0;
+}
+.admin-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #e9eef5;
+  border-radius: 22px;
+  padding: 1.35rem 1.5rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  background: #eef4ff;
+  color: #2563eb;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-metrics {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 220px;
+}
+
+.mini-metric {
+  background: #fff;
+  border: 1px solid #e9eef5;
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.mini-metric span {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  margin-bottom: 0.2rem;
+}
+
+.mini-metric strong {
+  font-size: 1.4rem;
+  color: #111827;
+}
+
+@media (max-width: 991.98px) {
+  .admin-hero {
+    flex-direction: column;
+  }
+
+  .hero-metrics {
+    min-width: 0;
+  }
 }
 </style>

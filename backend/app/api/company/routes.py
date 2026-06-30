@@ -573,6 +573,7 @@ def get_company_placements():
             "placements": [
                 {
                     "placement_id": placement.placement_id,
+                    "drive_id": placement.application.drive.drive_id,
                     "student_name": placement.application.student.name,
                     "roll_no": placement.application.student.roll_no,
                     "job_title": placement.application.drive.job_title,
@@ -652,6 +653,7 @@ def update_placement(placement_id):
                 "message": "Placement updated successfully",
                 "placement": {
                     "placement_id": placement.placement_id,
+                    "drive_id": placement.application.drive.drive_id,
                     "application_id": placement.application_id,
                     "student_name": placement.application.student.name,
                     "job_title": placement.application.drive.job_title,
