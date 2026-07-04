@@ -1,6 +1,6 @@
 from flask import Flask
 from .api import api_bp
-from app.extensions import db, bcrypt, CORS, jwt
+from app.extensions import db, bcrypt, CORS, jwt, cache
 from app.config import Config
 from app.utils.cli import register_commands
 from app.models.user import User
@@ -27,6 +27,7 @@ def create_app():
         supports_credentials=True,
     )
     jwt.init_app(app)
+    cache.init_app(app)
     # Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")

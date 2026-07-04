@@ -1,4 +1,11 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+
   flask:
     build: ./backend
     ports:
@@ -7,9 +14,42 @@ services:
       - .env
     volumes:
       - ./backend/app:/app/app
-      - ./backend/uploads/resumes:/app/uploads/resumes
+      - ./backend/uploads:/app/uploads
       - flask_data:/app/instance
-      - ./uploads/offer_letters:/app/uploads/offer_letters
+
+    depends_on:
+      - redis
+
+
+  celery_worker:
+    build: ./backend
+    command: celery -A app.jobs.celery_app.celery worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/uploads:/app/uploads
+      - flask_data:/app/instance
+
+    depends_on:
+      - redis
+
+    restart: unless-stopped
+
+
+  celery_beat:
+    build: ./backend
+    command: celery -A app.jobs.celery_app.celery beat --loglevel=info --schedule=/app/celerybeat/celerybeat-schedule
+    env_file:
+      - .env
+    volumes:
+      - ./backend/app:/app/app
+      - flask_data:/app/instance
+      - celerybeat_data:/app/celerybeat
+    depends_on:
+      - redis
+
+    restart: unless-stopped
 
   vue:
     build: ./frontend
@@ -21,5 +61,7 @@ services:
     stdin_open: true
     tty: true
 
+
 volumes:
   flask_data:
+  celerybeat_data:
