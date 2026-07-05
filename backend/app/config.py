@@ -22,3 +22,10 @@ class Config:
     CACHE_REDIS_PORT = int(os.environ.get("CACHE_REDIS_PORT", 6379))
     CACHE_REDIS_DB = int(os.environ.get("CACHE_REDIS_DB", 2))
     CACHE_DEFAULT_TIMEOUT = 300
+
+    MAIL_SERVER = "smtp.resend.com"
+    MAIL_PORT = 587
+    MAIL_USERNAME = "resend"
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_USE_TLS = True
+    MAIL_DEFAULT_SENDER = "onboarding@resend.dev"

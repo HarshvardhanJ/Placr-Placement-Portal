@@ -1,8 +1,9 @@
 from celery import Celery
+from celery.schedules import crontab
 
 
 def make_celery(app):
-    celery = Celery(app.import_name)
+    celery = Celery(app.import_name, include=["app.jobs.reminders"])
     celery.conf.update(app.config["CELERY"])
 
     class FlaskTask(celery.Task):
@@ -12,9 +13,12 @@ def make_celery(app):
 
     celery.Task = FlaskTask
 
-    celery.autodiscover_tasks(["app.jobs"])
-
-    celery.conf.beat_schedule = {}
+    celery.conf.beat_schedule = {
+        "interview-reminder": {
+            "task": "jobs.interview-reminder",
+            "schedule": crontab(hour=6, minute=0),
+        }
+    }
 
     return celery
 

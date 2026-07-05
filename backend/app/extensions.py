@@ -3,8 +3,10 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
+from flask_mail import Mail
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 cache = Cache()
+mail = Mail()

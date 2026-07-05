@@ -6,3 +6,4 @@ flask-jwt-extended
 celery
 redis
 Flask-Caching
+flask-mail
