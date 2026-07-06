@@ -1,9 +1,12 @@
+from datetime import date, datetime
+
 from app.extensions import mail
 from flask_mail import Message
-
+from flask import render_template_string
 from app.models.application import Application
 from app.models.drive import Drive
 from app.models.student import Student
+from datetime import timedelta
 
 
 def send_interview_reminder(student: Student, drive: Drive, application: Application):
@@ -29,4 +32,41 @@ def send_interview_reminder(student: Student, drive: Drive, application: Applica
     - Placr
     """
 
+    mail.send(msg)
+
+
+def send_report_mail(
+    start_date: datetime,
+    end_date: datetime,
+    placement_report: dict,
+):
+    msg = Message(
+        subject=f"Monthly Placement Report - {start_date.strftime('%B %Y')}",
+        recipients=["24f2001360@ds.study.iitm.ac.in"],
+    )
+
+    msg.body = "Hello Admin"
+
+    msg.html = render_template_string(
+        """
+            <html>
+            <body style="font-family: Arial, sans-serif;">
+                <h2>Monthly Placement Report</h2>
+                <p><strong>Period:</strong> {{ start_date }} to {{ end_date }}</p>
+                <table border="1" cellpadding="8" cellspacing="0">
+                    <tr><td>Drives Conducted</td><td>{{ drives_conducted }}</td></tr>
+                    <tr><td>Total Applications</td><td>{{ total_applications }}</td></tr>
+                    <tr><td>Students Selected</td><td>{{ total_selected }}</td></tr>
+                    <tr><td>Total Placements</td><td>{{ total_placements }}</td></tr>
+                </table>
+            </body>
+            </html>
+            """,
+        start_date=start_date.strftime("%d-%m-%Y"),
+        end_date=(end_date - timedelta(seconds=1)).strftime("%d-%m-%Y"),
+        drives_conducted=placement_report["drives_conducted"],
+        total_applications=placement_report["total_applications"],
+        total_selected=placement_report["total_selected"],
+        total_placements=placement_report["total_placements"],
+    )
     mail.send(msg)

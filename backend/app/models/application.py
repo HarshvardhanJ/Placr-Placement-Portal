@@ -37,6 +37,7 @@ class Application(db.Model):
     remarks = db.Column(db.String, nullable=True)
     interview_date = db.Column(db.DateTime, nullable=True)
     interview_type = db.Column(db.Enum(InterviewEnum), nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
     placement = db.relationship("Placement", backref="application", uselist=False)
 
     def to_dict(self):
@@ -54,4 +55,5 @@ class Application(db.Model):
                 self.interview_type.value if self.interview_type else None
             ),
             "drive": self.drive.to_dict(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

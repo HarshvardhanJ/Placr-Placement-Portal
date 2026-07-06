@@ -3,7 +3,7 @@ from celery.schedules import crontab
 
 
 def make_celery(app):
-    celery = Celery(app.import_name, include=["app.jobs.reminders"])
+    celery = Celery(app.import_name, include=["app.jobs.reminders", "app.jobs.reports"])
     celery.conf.update(app.config["CELERY"])
 
     class FlaskTask(celery.Task):
@@ -17,7 +17,11 @@ def make_celery(app):
         "interview-reminder": {
             "task": "jobs.interview-reminder",
             "schedule": crontab(hour=6, minute=0),
-        }
+        },
+        "send-monthly-placement-report": {
+            "task": "jobs.send_monthly_placement_report",
+            "schedule": crontab(day_of_month=1, hour=12),
+        },
     }
 
     return celery
