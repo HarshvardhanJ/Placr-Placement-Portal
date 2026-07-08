@@ -3,7 +3,11 @@
     <AdminSidebar />
 
     <div class="dashboard-main">
-      <AdminTopbar />
+      <AdminTopbar
+        :search-query="searchQuery"
+        :show-search="showSearch"
+        @update:search-query="$emit('update:searchQuery', $event)"
+      />
 
       <main class="dashboard-content">
         <div class="dashboard-page">
@@ -21,6 +25,19 @@ import { onMounted } from "vue";
 import { useAdminStore } from "@/stores/adminStore";
 
 const adminStore = useAdminStore();
+
+defineProps({
+  searchQuery: {
+    type: String,
+    default: "",
+  },
+  showSearch: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+defineEmits(["update:searchQuery"]);
 
 onMounted(() => {
   adminStore.fetchDashboardStats();

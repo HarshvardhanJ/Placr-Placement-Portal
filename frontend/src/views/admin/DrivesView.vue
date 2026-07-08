@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Drives"
       subtitle="Manage placement drives, approvals, and status."
@@ -305,8 +305,9 @@ const filteredDrives = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     const matchesSearch =
-      drive.company.toLowerCase().includes(query) ||
-      drive.role.toLowerCase().includes(query) ||
+      (drive.company || "").toLowerCase().includes(query) ||
+      (drive.role || "").toLowerCase().includes(query) ||
+      (drive.required_skills || "").toLowerCase().includes(query) ||
       (drive.location || drive.job_location || "")
         .toLowerCase()
         .includes(query);

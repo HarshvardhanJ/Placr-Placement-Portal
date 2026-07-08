@@ -3,7 +3,11 @@
     <CompanySidebar />
 
     <div class="company-main">
-      <CompanyTopbar :search-query="searchQuery" @update:search-query="$emit('update:searchQuery', $event)" />
+      <CompanyTopbar
+        :search-query="searchQuery"
+        :show-search="showSearch"
+        @update:search-query="$emit('update:searchQuery', $event)"
+      />
 
       <main class="company-content">
         <div class="company-page">
@@ -22,6 +26,10 @@ defineProps({
   searchQuery: {
     type: String,
     default: "",
+  },
+  showSearch: {
+    type: Boolean,
+    default: true,
   },
 });
 

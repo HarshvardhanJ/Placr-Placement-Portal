@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Applications"
       subtitle="Monitor and search all job applications across the platform."
@@ -264,10 +264,11 @@ const filteredApplications = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     const matchesSearch =
-      application.student_name.toLowerCase().includes(query) ||
-      application.roll_no.toLowerCase().includes(query) ||
-      application.company.toLowerCase().includes(query) ||
-      application.job_title.toLowerCase().includes(query);
+      (application.student_name || "").toLowerCase().includes(query) ||
+      (application.roll_no || "").toLowerCase().includes(query) ||
+      (application.company || "").toLowerCase().includes(query) ||
+      (application.job_title || "").toLowerCase().includes(query) ||
+      (application.status || "").toLowerCase().includes(query);
 
     const matchesStatus =
       !statusFilter.value ||

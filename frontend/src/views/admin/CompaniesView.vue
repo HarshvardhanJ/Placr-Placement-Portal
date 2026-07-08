@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Companies"
       subtitle="Manage company accounts, approvals, and status."
@@ -235,8 +235,10 @@ const filteredCompanies = computed(() => {
     const query = searchQuery.value.toLowerCase();
 
     const matchesSearch =
-      company.name.toLowerCase().includes(query) ||
-      company.industry.toLowerCase().includes(query);
+      (company.name || "").toLowerCase().includes(query) ||
+      (company.industry || "").toLowerCase().includes(query) ||
+      (company.location || "").toLowerCase().includes(query) ||
+      (company.contact || "").toLowerCase().includes(query);
 
     const matchesStatus =
       !statusFilter.value ||

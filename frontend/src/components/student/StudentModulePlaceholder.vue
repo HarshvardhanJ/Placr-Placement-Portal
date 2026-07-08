@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout v-model:search-query="searchQuery">
+  <StudentLayout :show-search="false">
     <PageHeader :title="title" :subtitle="subtitle" />
 
     <div class="card shadow-sm border-0">
@@ -19,7 +19,6 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
 import StudentLayout from "@/layouts/StudentLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
 import StudentEmptyState from "./StudentEmptyState.vue";
@@ -47,5 +46,4 @@ defineProps({
   },
 });
 
-const searchQuery = ref("");
 </script>

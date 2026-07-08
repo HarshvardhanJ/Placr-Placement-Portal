@@ -1,16 +1,19 @@
 <template>
   <header class="topbar">
-    <div class="topbar-left">
+    <div v-if="showSearch" class="topbar-left">
       <div class="search-box">
         <i class="ti ti-search"></i>
 
         <input
+          :value="searchQuery"
+          @input="$emit('update:searchQuery', $event.target.value)"
           type="text"
           class="form-control border-0"
           placeholder="Search students, companies, drives..."
         />
       </div>
     </div>
+    <div v-else class="topbar-left"></div>
 
     <div class="topbar-right">
       <div class="user-profile">
@@ -25,6 +28,21 @@
     </div>
   </header>
 </template>
+
+<script setup>
+defineProps({
+  searchQuery: {
+    type: String,
+    default: "",
+  },
+  showSearch: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+defineEmits(["update:searchQuery"]);
+</script>
 
 <style scoped>
 .topbar {

@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Reports"
       subtitle="Placement summaries and system-level reporting."
@@ -24,7 +24,11 @@
       </div>
 
       <div class="row g-3 mt-1">
-        <div class="col-12 col-md-4" v-for="item in items" :key="item.title">
+        <div
+          class="col-12 col-md-4"
+          v-for="item in filteredItems"
+          :key="item.title"
+        >
           <div class="report-card shadow-sm">
             <div class="d-flex align-items-center justify-content-between mb-3">
               <div class="fw-semibold">{{ item.title }}</div>
@@ -41,6 +45,9 @@
 <script setup>
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
+import { computed, ref } from "vue";
+
+const searchQuery = ref("");
 
 const items = [
   {
@@ -59,6 +66,18 @@ const items = [
     icon: "ti-file-text",
   },
 ];
+
+const filteredItems = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return items;
+  return items.filter((item) =>
+    [item.title, item.note].some((field) =>
+      String(field || "")
+        .toLowerCase()
+        .includes(query),
+    ),
+  );
+});
 </script>
 
 <style scoped>

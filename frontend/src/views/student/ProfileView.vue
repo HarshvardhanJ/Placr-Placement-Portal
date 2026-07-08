@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout v-model:search-query="searchQuery">
+  <StudentLayout :show-search="false">
     <PageHeader
       title="Profile"
       subtitle="Update education, skills, resume, and experience."
@@ -332,7 +332,6 @@ import { useStudentStore } from "@/stores/studentStore";
 const store = useStudentStore();
 const { profile } = storeToRefs(store);
 
-const searchQuery = ref("");
 const saving = ref(false);
 const resumeInput = ref(null);
 

@@ -1,6 +1,6 @@
 <template>
   <header class="topbar">
-    <div class="topbar-left">
+    <div v-if="showSearch" class="topbar-left">
       <div class="search-box">
         <i class="ti ti-search"></i>
         <input
@@ -12,6 +12,7 @@
         />
       </div>
     </div>
+    <div v-else class="topbar-left"></div>
 
     <div class="topbar-right">
       <div class="user-profile">
@@ -34,6 +35,10 @@ defineProps({
   searchQuery: {
     type: String,
     default: "",
+  },
+  showSearch: {
+    type: Boolean,
+    default: true,
   },
 });
 

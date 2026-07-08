@@ -1,5 +1,5 @@
 <template>
-  <CompanyLayout>
+  <CompanyLayout :show-search="false">
     <PageHeader
       title="Settings"
       subtitle="Manage your account security and preferences."

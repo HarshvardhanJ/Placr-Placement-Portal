@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout v-model:search-query="searchQuery">
+  <StudentLayout :show-search="false">
     <PageHeader
       title="Settings"
       subtitle="Adjust notifications and account preferences."
@@ -175,8 +175,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 const studentStore = useStudentStore();
 const { profile } = storeToRefs(studentStore);
-
-const searchQuery = ref("");
 
 const defaults = [
   {

@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout v-model:search-query="searchQuery">
+  <StudentLayout :show-search="false">
     <PageHeader
       :title="drive?.job_title || 'Drive Details'"
       :subtitle="drive?.company_name || 'Approved placement drive'"
@@ -278,7 +278,6 @@ const route = useRoute();
 const store = useStudentStore();
 const { dashboard, profile } = storeToRefs(store);
 
-const searchQuery = ref("");
 const loading = ref(false);
 const applying = ref(false);
 const drive = ref(null);

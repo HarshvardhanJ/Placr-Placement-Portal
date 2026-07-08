@@ -1,5 +1,5 @@
 <template>
-  <CompanyLayout>
+  <CompanyLayout :show-search="false">
     <PageHeader
       title="Company Profile"
       subtitle="Keep your company details up to date for students and admin."

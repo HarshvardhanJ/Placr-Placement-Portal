@@ -4,6 +4,7 @@
     <div class="student-main">
       <StudentTopbar
         :search-query="searchQuery"
+        :show-search="showSearch"
         @update:search-query="$emit('update:searchQuery', $event)"
       />
       <main class="student-content">
@@ -23,6 +24,10 @@ defineProps({
   searchQuery: {
     type: String,
     default: "",
+  },
+  showSearch: {
+    type: Boolean,
+    default: true,
   },
 });
 

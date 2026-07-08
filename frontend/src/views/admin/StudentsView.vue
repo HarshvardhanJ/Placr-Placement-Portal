@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Students"
       subtitle="Manage student accounts, status, and records."

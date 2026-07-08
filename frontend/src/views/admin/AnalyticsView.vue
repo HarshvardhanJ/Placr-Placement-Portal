@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader
       title="Analytics"
       subtitle="Placement trends, funnel metrics, and activity snapshots."
@@ -25,7 +25,11 @@
       </div>
 
       <div class="row g-3 mt-1">
-        <div class="col-12 col-lg-4" v-for="item in cards" :key="item.title">
+        <div
+          class="col-12 col-lg-4"
+          v-for="item in filteredCards"
+          :key="item.title"
+        >
           <div class="mini-panel shadow-sm">
             <div class="text-secondary small text-uppercase fw-semibold mb-1">
               {{ item.title }}
@@ -42,12 +46,27 @@
 <script setup>
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
+import { computed, ref } from "vue";
+
+const searchQuery = ref("");
 
 const cards = [
   { title: "Applications", value: "—", note: "Application funnel" },
   { title: "Placements", value: "—", note: "Monthly outcomes" },
   { title: "Approvals", value: "—", note: "Company and drive status" },
 ];
+
+const filteredCards = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return cards;
+  return cards.filter((item) =>
+    [item.title, item.note].some((field) =>
+      String(field || "")
+        .toLowerCase()
+        .includes(query),
+    ),
+  );
+});
 </script>
 
 <style scoped>

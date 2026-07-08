@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout v-model:search-query="searchQuery">
     <PageHeader title="Dashboard" subtitle="Everything you need at a glance.">
       <template #actions>
         <div class="d-flex flex-wrap gap-2">
@@ -58,14 +58,14 @@
       <div class="col-xl-8">
         <ActionList
           title="Pending Approvals"
-          :items="dashboard.pending || []"
+          :items="filteredPending"
         />
       </div>
 
       <div class="col-xl-4">
         <RecentActivity
           title="Recent Activity"
-          :activities="dashboard.recent_activity || []"
+          :activities="filteredRecentActivity"
         />
       </div>
     </div>
@@ -75,7 +75,7 @@
         <DataTable
           title="Recent Drives"
           :headers="headers"
-          :rows="dashboard.recent_drives"
+          :rows="filteredRecentDrives"
         >
           <template #approval_status="{ row }">
             <span
@@ -107,6 +107,7 @@ import PageHeader from "@/components/shared/PageHeader.vue";
 import api from "@/services/api";
 
 const loading = ref(false);
+const searchQuery = ref("");
 
 const dashboard = ref({
   stats: {
@@ -161,6 +162,37 @@ const stats = computed(() => [
     value: dashboard.value.stats.applications,
   },
 ]);
+
+const normalize = (value = "") => String(value || "").toLowerCase();
+
+const matchesQuery = (fields) => {
+  const query = normalize(searchQuery.value).trim();
+  if (!query) return true;
+  return fields.some((field) => normalize(field).includes(query));
+};
+
+const filteredPending = computed(() =>
+  (dashboard.value.pending || []).filter((item) =>
+    matchesQuery([item.title, item.subtitle, item.type]),
+  ),
+);
+
+const filteredRecentActivity = computed(() =>
+  (dashboard.value.recent_activity || []).filter((activity) =>
+    matchesQuery([activity.message, activity.time]),
+  ),
+);
+
+const filteredRecentDrives = computed(() =>
+  (dashboard.value.recent_drives || []).filter((drive) =>
+    matchesQuery([
+      drive.company_name,
+      drive.job_location,
+      drive.job_title,
+      drive.approval_status,
+    ]),
+  ),
+);
 
 onMounted(() => {
   loadDashboard();
