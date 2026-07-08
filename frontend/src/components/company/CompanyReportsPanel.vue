@@ -8,11 +8,21 @@
         </div>
         <button
           class="btn btn-primary btn-sm"
-          disabled
-          title="CSV export is part of the backend jobs milestone and is not enabled yet"
+          type="button"
+          :disabled="exportBusy"
+          @click="startExport"
         >
-          <i class="ti ti-download me-2"></i>Export CSV
+          <span
+            v-if="exportBusy"
+            class="spinner-border spinner-border-sm me-2"
+            aria-hidden="true"
+          ></span>
+          <i v-else class="ti ti-download me-2"></i>{{ exportButtonText }}
         </button>
+      </div>
+
+      <div v-if="exportMessage" class="alert mb-4" :class="exportAlertClass">
+        {{ exportMessage }}
       </div>
 
       <div class="row g-3 mb-4">
@@ -41,12 +51,29 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useCompanyStore } from "@/stores/companyStore";
 
 const store = useCompanyStore();
 const { placements, dashboard } = storeToRefs(store);
+const exportTaskId = ref("");
+const exportState = ref("");
+const exportMessage = ref("");
+const exportError = ref(false);
+let pollTimer = null;
+
+const exportBusy = computed(() =>
+  ["PENDING", "STARTED", "RETRY"].includes(exportState.value),
+);
+
+const exportButtonText = computed(() =>
+  exportBusy.value ? "Preparing CSV" : "Export CSV",
+);
+
+const exportAlertClass = computed(() =>
+  exportError.value ? "alert-danger" : "alert-info",
+);
 
 const reportCards = computed(() => {
   const totalPlacements = placements.value?.length || 0;
@@ -71,6 +98,96 @@ const reportCards = computed(() => {
     },
   ];
 });
+
+const saveBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+const stopPolling = () => {
+  if (pollTimer) {
+    window.clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+};
+
+const downloadReadyExport = async (result) => {
+  const filename = result?.filename;
+  if (!filename) {
+    throw new Error("Export completed without a filename");
+  }
+
+  const response = await store.downloadExport(filename);
+  saveBlob(response.data, filename);
+};
+
+const pollExportStatus = async () => {
+  if (!exportTaskId.value) return;
+
+  try {
+    const status = await store.getExportStatus(exportTaskId.value);
+    exportState.value = status.state;
+
+    if (status.state === "SUCCESS") {
+      stopPolling();
+      const result = status.result || {};
+      if (result.success === false) {
+        exportError.value = true;
+        exportMessage.value = result.error || result.reason || "Export failed.";
+        return;
+      }
+      await downloadReadyExport(result);
+      exportError.value = false;
+      exportMessage.value = "CSV export is ready and has been downloaded.";
+      exportState.value = "";
+      return;
+    }
+
+    if (status.state === "FAILURE") {
+      stopPolling();
+      exportError.value = true;
+      exportMessage.value = "Export job failed. Please try again.";
+      exportState.value = "";
+      return;
+    }
+
+    exportMessage.value = "CSV export is being prepared. You will also receive an email when it is ready.";
+    pollTimer = window.setTimeout(pollExportStatus, 2500);
+  } catch (error) {
+    stopPolling();
+    exportError.value = true;
+    exportState.value = "";
+    exportMessage.value =
+      error?.response?.data?.error || error?.message || "Failed to check export status.";
+  }
+};
+
+const startExport = async () => {
+  stopPolling();
+  exportError.value = false;
+  exportState.value = "PENDING";
+  exportMessage.value = "Starting CSV export...";
+
+  try {
+    const data = await store.startExport();
+    exportTaskId.value = data.task_id;
+    exportMessage.value = data.message || "CSV export started.";
+    await pollExportStatus();
+  } catch (error) {
+    exportError.value = true;
+    exportState.value = "";
+    exportMessage.value =
+      error?.response?.data?.error || error?.message || "Failed to start export.";
+  }
+};
+
+onBeforeUnmount(stopPolling);
 </script>
 
 <style scoped>

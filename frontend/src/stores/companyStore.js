@@ -295,6 +295,18 @@ export const useCompanyStore = defineStore("company", {
       return data;
     },
 
+    async startExport() {
+      return companyApi.startExport();
+    },
+
+    async getExportStatus(taskId) {
+      return companyApi.getExportStatus(taskId);
+    },
+
+    async downloadExport(filename) {
+      return companyApi.downloadExport(filename);
+    },
+
     clearCompanyState() {
       this.dashboard = { ...defaultDashboard };
       this.drives = [];

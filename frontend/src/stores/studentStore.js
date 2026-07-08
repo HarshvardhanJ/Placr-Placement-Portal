@@ -397,6 +397,18 @@ export const useStudentStore = defineStore("student", {
     async downloadOfferLetter(placementId) {
       return studentApi.downloadOfferLetter(placementId);
     },
+
+    async startExport() {
+      return studentApi.startExport();
+    },
+
+    async getExportStatus(taskId) {
+      return studentApi.getExportStatus(taskId);
+    },
+
+    async downloadExport(filename) {
+      return studentApi.downloadExport(filename);
+    },
   },
 });
 

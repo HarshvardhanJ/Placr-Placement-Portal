@@ -73,6 +73,22 @@ export const studentApi = {
       responseType: "blob",
     });
   },
+
+  async startExport() {
+    const { data } = await api.post("/student/exports");
+    return data;
+  },
+
+  async getExportStatus(taskId) {
+    const { data } = await api.get(`/student/exports/status/${taskId}`);
+    return data;
+  },
+
+  async downloadExport(filename) {
+    return api.get(`/student/exports/download/${filename}`, {
+      responseType: "blob",
+    });
+  },
 };
 
 export default studentApi;

@@ -2,7 +2,7 @@
   <DashboardLayout>
     <PageHeader
       title="Reports"
-      subtitle="Export-ready summaries and downloadable insights."
+      subtitle="Placement summaries and system-level reporting."
     >
       <template #actions>
         <RouterLink to="/admin/analytics" class="btn btn-outline-primary">
@@ -15,11 +15,11 @@
       <div class="reports-banner">
         <div class="eyebrow mb-2">Report center</div>
         <h3 class="fw-bold mb-2">
-          Placeholders are ready for CSV, PDF, and placement summaries.
+          Monthly reporting is handled by the backend job schedule.
         </h3>
         <p class="text-secondary mb-0">
-          You can wire this screen to monthly exports, shortlist summaries, and
-          company-wise reports later.
+          Student and company CSV exports are available from their own
+          dashboards, where access control matches each user role.
         </p>
       </div>
 
@@ -49,12 +49,12 @@ const items = [
     icon: "ti-file-report",
   },
   {
-    title: "Drive Export",
+    title: "Drive Summary",
     note: "Approved, pending, and closed drives",
-    icon: "ti-download",
+    icon: "ti-briefcase",
   },
   {
-    title: "Applications Export",
+    title: "Applications Summary",
     note: "Status-wise application batches",
     icon: "ti-file-text",
   },

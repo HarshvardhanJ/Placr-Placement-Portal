@@ -88,6 +88,22 @@ export const companyApi = {
 
     return data;
   },
+
+  async startExport() {
+    const { data } = await api.post("/company/exports");
+    return data;
+  },
+
+  async getExportStatus(taskId) {
+    const { data } = await api.get(`/company/exports/status/${taskId}`);
+    return data;
+  },
+
+  async downloadExport(filename) {
+    return api.get(`/company/exports/download/${filename}`, {
+      responseType: "blob",
+    });
+  },
 };
 
 export default companyApi;
