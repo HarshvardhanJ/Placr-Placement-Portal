@@ -1,19 +1,19 @@
 from datetime import datetime
 import uuid
-from flask import Blueprint, jsonify, request, send_file
-from flask_jwt_extended import get_jwt_identity
+from flask import Blueprint, json, jsonify, request, send_file
+from flask_jwt_extended import get_jwt_identity, jwt_required
 import os
 from app.extensions import db
 from app.models.application import Application, ApplicationStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.student import Student
-from app.models.user import UserRoleEnum
+from app.models.user import User, UserRoleEnum
 from app.models.company import Company
 from app.models.placement import Placement
 from app.utils.decorators import active_required, role_required
 
-student_api = Blueprint("student_api", __name__)
 
+student_api = Blueprint("student_api", __name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 RESUME_UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "resumes")
@@ -622,3 +622,57 @@ def download_offer_letter(placement_id):
         download_name=f"offer_letter_{student.name}.pdf",
         mimetype="application/pdf",
     )
+
+
+@student_api.route("/exports", methods=["POST"])
+@role_required(UserRoleEnum.student)
+def trigger_student_export():
+    from app.jobs.exports import export_student_history
+
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(user_id=user_id).first()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if not user.student_profile:
+        return jsonify({"error": "Student profile not found"}), 404
+
+    task = export_student_history.delay(user_id, user.email)
+    return jsonify(
+        {
+            "message": "Export started. You will receive an email when it is ready.",
+            "task_id": task.id,
+        }
+    ), 202
+
+
+@student_api.route("/exports/status/<task_id>", methods=["GET"])
+@role_required(UserRoleEnum.student)
+def export_status(task_id):
+    from app.jobs.exports import export_student_history
+
+    result = export_student_history.AsyncResult(task_id)
+    return jsonify(
+        {
+            "task_id": task_id,
+            "state": result.state,
+            "result": result.result if result.ready() else None,
+        }
+    )
+
+
+@student_api.route("/exports/download/<path:filename>", methods=["GET"])
+@role_required(UserRoleEnum.student)
+def download_export(filename):
+    from app.jobs.exports import _get_export_dir
+
+    export_folder = _get_export_dir()
+
+    safe_root = os.path.abspath(export_folder)
+    filepath = os.path.abspath(os.path.join(export_folder, filename))
+    if not filepath.startswith(safe_root + os.sep):
+        return jsonify({"error": "Invalid file path"}), 400
+    if not os.path.exists(filepath):
+        return jsonify({"error": "File not found"}), 404
+
+    return send_file(filepath, as_attachment=True, download_name=filename)

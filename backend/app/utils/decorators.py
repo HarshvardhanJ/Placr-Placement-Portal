@@ -1,11 +1,11 @@
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from app.models.user import User
+from app.models.user import User, UserRoleEnum
 from functools import wraps
 from app.models.company import Company, CompanyStatusEnum
 
 
-def role_required(role):
+def role_required(role: UserRoleEnum):
     def decorator(f):
         @wraps(f)
         @jwt_required()

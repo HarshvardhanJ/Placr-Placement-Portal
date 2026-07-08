@@ -70,3 +70,30 @@ def send_report_mail(
         total_placements=placement_report["total_placements"],
     )
     mail.send(msg)
+
+
+def send_export_complete_mail(
+    role, filename, count, to="24f2001360@ds.study.iitm.ac.in"
+):
+    msg = Message(
+        subject=f"[Placement Portal] Your {role} export is ready", recipients=[to]
+    )
+
+    msg.body = f"""
+        Hello,
+
+        Your application history export has been completed successfully.
+
+        • Role        : {role}
+        • Records     : {count}
+        • File name   : {filename}
+        • Generated at: {datetime.utcnow().isoformat()} UTC
+
+        Please log in to the Placement Portal and use the
+        "Download Export" option to fetch your CSV file.
+
+        Regards,
+        Placr
+        """
+
+    mail.send(msg)

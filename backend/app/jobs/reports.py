@@ -20,7 +20,7 @@ def get_previous_month_window(reference=None):
     return first_day_prev_month, first_day_current_month
 
 
-@celery.task(namy="jobs.send_monthly_placement_report")
+@celery.task(name="jobs.send_monthly_placement_report")
 def send_monthly_placement_report():
     start_date, end_date = get_previous_month_window()
 

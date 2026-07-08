@@ -1,5 +1,4 @@
 from flask import Flask
-from .api import api_bp
 from app.extensions import db, bcrypt, CORS, jwt, cache, mail
 from app.config import Config
 from app.utils.cli import register_commands
