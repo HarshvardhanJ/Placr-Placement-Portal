@@ -5,16 +5,28 @@ from app.models.user import User
 from app.models.student import Student
 from app.models.company import Company, CompanyStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
-from app.extensions import db
+from app.extensions import db, cache
 from app.models.application import Application
+from app.utils.cache_helper import clear_cache_pattern
 
 
 admin_bp = Blueprint("admin_bp", __name__)
 
 
+def make_companies_key():
+    search = request.args.get("search", "")
+    return f"admin_companies_{search}"
+
+
+def make_students_key():
+    search = request.args.get("search", "")
+    return f"admin_students_{search}"
+
+
 # ADMIN DASHBOARD
 @admin_bp.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.admin)
+@cache.cached(timeout=60, key_prefix="admin_dashboard")
 def admin_dashboard():
 
     pending_companies = (
@@ -100,9 +112,9 @@ def admin_dashboard():
     ), 200
 
 
-# ADMIN - COMPANY ROUTES
 @admin_bp.route("/companies", methods=["GET"])
 @role_required(UserRoleEnum.admin)
+@cache.cached(timeout=300, key_prefix=make_companies_key)
 def admin_companies():
     search = request.args.get("search", "")
     query = Company.query
@@ -136,6 +148,10 @@ def approve_company(id):
     try:
         company.approval_status = CompanyStatusEnum.approved
         db.session.commit()
+
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Company {company.name} approved"}), 200
     except Exception as e:
         db.session.rollback()
@@ -153,6 +169,10 @@ def reject_company(id):
     try:
         company.approval_status = CompanyStatusEnum.not_approved
         db.session.commit()
+
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Company {company.name} rejected"}), 200
     except Exception as e:
         db.session.rollback()
@@ -171,6 +191,10 @@ def blacklist_company(id):
     try:
         user.is_active = False
         db.session.commit()
+
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Company {company.name} blacklisted"}), 200
     except Exception as e:
         db.session.rollback()
@@ -182,6 +206,7 @@ def blacklist_company(id):
 # ADMIN - STUDENT ROUTES
 @admin_bp.route("/students", methods=["GET"])
 @role_required(UserRoleEnum.admin)
+@cache.cached(timeout=300, key_prefix=make_students_key)
 def admin_students():
     search = request.args.get("search", "")
     query = Student.query
@@ -216,6 +241,10 @@ def blacklist_student(id):
     try:
         user.is_active = False
         db.session.commit()
+
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Student {student.name} blacklisted"}), 200
     except Exception as e:
         db.session.rollback()
@@ -250,6 +279,9 @@ def approve_drives(id):
     try:
         drive.approval_status = DriveStatusEnum.approved
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Drive {id} approved"}), 200
     except Exception as e:
         db.session.rollback()
@@ -267,6 +299,9 @@ def reject_drives(id):
     try:
         drive.approval_status = DriveStatusEnum.rejected
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": f"Drive {id} rejected"}), 200
     except Exception as e:
         db.session.rollback()
@@ -285,6 +320,9 @@ def close_drive(id):
     try:
         drive.approval_status = DriveStatusEnum.closed
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify({"success": "Drive closed"})
     except Exception as e:
         db.session.rollback()

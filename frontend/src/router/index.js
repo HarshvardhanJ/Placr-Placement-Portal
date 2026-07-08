@@ -60,124 +60,166 @@ const routes = [
     path: "/admin",
     name: "admin-dashboard",
     component: AdminDashboardView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/companies",
     name: "admin-company-dashboard",
     component: AdminCompaniesView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/students",
     name: "admin-student-dashboard",
     component: AdminStudentsView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/drives",
     name: "admin-drives-dashboard",
     component: AdminDrivesView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/applications",
     name: "admin-application-dashboard",
     component: AdminApplicationsView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/analytics",
     name: "admin-analytics-dashboard",
     component: AdminAnalyticsView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   {
     path: "/admin/reports",
     name: "admin-reports-dashboard",
     component: AdminReportsView,
+    meta: { requiresAuth: true, role: "admin" },
   },
   // COMPANY ROUTES
   {
     path: "/company",
     name: "company-dashboard",
     component: CompanyDashboardView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/drives",
     name: "company-drives",
     component: CompanyDrivesView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/drives/:id",
     name: "company-drive-details",
     component: CompanyDriveDetailsView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/applications",
     name: "company-applications",
     component: CompanyApplicationsView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/interviews",
     name: "company-interviews",
     component: CompanyInterviewsView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/placements",
     name: "company-placements",
     component: CompanyPlacementsView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/profile",
     name: "company-profile",
     component: CompanyProfileView,
+    meta: { requiresAuth: true, role: "company" },
   },
   {
     path: "/company/settings",
     name: "company-settings",
     component: CompanySettingsView,
+    meta: { requiresAuth: true, role: "company" },
   },
   // STUDENT ROUTES
   {
     path: "/student",
     name: "student-dashboard",
     component: StudentDashboardView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/drives",
     name: "student-drives",
     component: StudentJobsView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/drives/:id",
     name: "student-drive-details",
     component: StudentDriveDetailsView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/applications",
     name: "student-applications",
     component: StudentApplicationsView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/interviews",
     name: "student-interviews",
     component: StudentInterviewsView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/placements",
     name: "student-placements",
     component: StudentPlacementsView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/profile",
     name: "student-profile",
     component: StudentProfileView,
+    meta: { requiresAuth: true, role: "student" },
   },
   {
     path: "/student/settings",
     name: "student-settings",
     component: StudentSettingsView,
+    meta: { requiresAuth: true, role: "student" },
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("user");
+
+  if (to.meta.requiresAuth && !token) {
+    return next("/login");
+  }
+
+  if (to.meta.role && role !== to.meta.role) {
+    return next(token ? "/login" : "/login");
+  }
+
+  if ((to.name === "login" || to.name === "register") && token && role) {
+    return next(`/${role}`);
+  }
+
+  next();
 });
 
 export default router;

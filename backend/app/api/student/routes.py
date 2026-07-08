@@ -3,7 +3,7 @@ import uuid
 from flask import Blueprint, json, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity, jwt_required
 import os
-from app.extensions import db
+from app.extensions import db, cache
 from app.models.application import Application, ApplicationStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.student import Student
@@ -11,12 +11,23 @@ from app.models.user import User, UserRoleEnum
 from app.models.company import Company
 from app.models.placement import Placement
 from app.utils.decorators import active_required, role_required
+from app.utils.cache_helper import clear_cache_pattern
 
 
 student_api = Blueprint("student_api", __name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 RESUME_UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "resumes")
+
+
+def make_student_dashboard_key():
+    return f"student_dashboard_{get_jwt_identity()}"
+
+
+def make_student_drives_key():
+    user_id = get_jwt_identity()
+    search = request.args.get("search", "")
+    return f"student_drives_{user_id}_{search}"
 
 
 def _get_resume_path(student):
@@ -59,6 +70,7 @@ def student_is_eligible_for_drive(student, drive):
 @student_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.student)
 @active_required
+@cache.cached(timeout=300, key_prefix=make_student_dashboard_key)
 def student_dashboard():
     user_id = get_jwt_identity()
 
@@ -256,6 +268,9 @@ def set_student_profile():
         student.skills = data.get("skills", student.skills)
         student.experience = data.get("experience", student.experience)
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {
                 "message": "Profile updated successfully",
@@ -317,6 +332,10 @@ def upload_resume():
 
         student.resume_path = filepath
         db.session.commit()
+
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         if (
             old_resume_path
             and old_resume_path != filepath
@@ -402,6 +421,9 @@ def student_apply(id):
         db.session.add(application)
         db.session.commit()
 
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {
                 "message": "Application submitted successfully",
@@ -443,6 +465,7 @@ def get_student_applications():
 @student_api.route("/drives", methods=["GET"])
 @role_required(UserRoleEnum.student)
 @active_required
+@cache.cached(timeout=300, key_prefix=make_student_drives_key)
 def get_available_drives():
     user_id = get_jwt_identity()
 

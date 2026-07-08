@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
-from app.extensions import db
+from app.extensions import db, cache
 from app.models.application import Application, ApplicationStatusEnum, InterviewEnum
 from app.models.company import Company
 from app.models.drive import Drive, DriveStatusEnum
 from app.models.placement import Placement
 from app.models.user import User, UserRoleEnum
 from app.utils.decorators import approved_company_required, role_required
+from app.utils.cache_helper import clear_cache_pattern
 from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity
 import os
@@ -15,9 +16,19 @@ import uuid
 company_api = Blueprint("company_api", __name__)
 
 
+def make_company_dashboard_key():
+    return f"company_dashboard_{get_jwt_identity()}"
+
+
+def make_company_drives_key():
+    user_id = get_jwt_identity()
+    return f"company_drives_{user_id}"
+
+
 @company_api.route("/dashboard", methods=["GET"])
 @role_required(UserRoleEnum.company)
 @approved_company_required
+@cache.cached(timeout=300, key_prefix=make_company_dashboard_key)
 def company_dashboard():
     user_id = get_jwt_identity()
 
@@ -168,6 +179,9 @@ def update_company_profile():
         company.description = data.get("description", company.description)
         company.location = data.get("location", company.location)
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {
                 "message": "Profile updated successfully",
@@ -182,6 +196,7 @@ def update_company_profile():
 @company_api.route("/drives", methods=["GET"])
 @role_required(UserRoleEnum.company)
 @approved_company_required
+@cache.cached(timeout=300, key_prefix=make_company_drives_key)
 def get_company_drives():
     user_id = get_jwt_identity()
     company = Company.query.filter_by(user_id=user_id).first()
@@ -258,6 +273,9 @@ def create_company_drives():
         )
         db.session.add(drive)
         db.session.commit()
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Failed to create drive", "details": str(e)}), 500
@@ -343,6 +361,9 @@ def update_drive(id):
 
         db.session.commit()
 
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {"message": "Drive updated successfully", "drive": drive.to_dict()}
         ), 200
@@ -538,6 +559,9 @@ def update_application_status(id, app_id):
 
             db.session.add(placement)
     db.session.commit()
+    clear_cache_pattern("admin_")
+    clear_cache_pattern("company_")
+    clear_cache_pattern("student_")
     return jsonify(
         {
             "message": "Application updated successfully",
@@ -649,6 +673,9 @@ def update_placement(placement_id):
 
         db.session.commit()
 
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {
                 "message": "Placement updated successfully",
@@ -739,6 +766,9 @@ def upload_offer_letter(placement_id):
 
         db.session.commit()
 
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         if (
             old_offer_letter_path
             and old_offer_letter_path != filepath
@@ -790,6 +820,9 @@ def close_drive(id):
         drive.approval_status = DriveStatusEnum.closed
         db.session.commit()
 
+        clear_cache_pattern("admin_")
+        clear_cache_pattern("company_")
+        clear_cache_pattern("student_")
         return jsonify(
             {
                 "message": "Drive closed successfully",
