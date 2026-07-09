@@ -7,6 +7,7 @@ from app.models.user import User, UserRoleEnum
 import re
 
 auth_bp = Blueprint("auth_bp", __name__)
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -17,8 +18,13 @@ def login():
         error = {"error": "Missing email or password in request body"}
         return jsonify(error), 400
 
-    email = data["email"]
+    email = normalize_text(data.get("email")).lower()
     password = data["password"]
+
+    if not validate_email(email):
+        return jsonify({"error": "Enter a valid email address"}), 400
+    if not password:
+        return jsonify({"error": "Password is required"}), 400
 
     user = User.query.filter_by(email=email).first()
 
@@ -57,12 +63,19 @@ def register_student():
         error = {"error": "Missing data fields"}
         return jsonify(error), 400
 
-    email = data["email"]
+    email = normalize_text(data["email"]).lower()
     password = data["password"]
     repeat_password = data["repeat_password"]
-    name = data["name"]
-    roll_no = data["roll_no"]
+    name = normalize_text(data["name"])
+    roll_no = normalize_text(data["roll_no"])
     role = UserRoleEnum.student
+
+    if not validate_email(email):
+        return jsonify({"error": "Enter a valid email address"}), 400
+    if len(name) < 2:
+        return jsonify({"error": "Full name must be at least 2 characters"}), 400
+    if not roll_no:
+        return jsonify({"error": "Roll number is required"}), 400
 
     if User.query.filter_by(email=email).first():
         error = {"error": "User already exists"}
@@ -77,7 +90,7 @@ def register_student():
         }, 400
 
     if password != repeat_password:
-        return jsonify({"error": "Password do not match"}), 400
+        return jsonify({"error": "Passwords do not match"}), 400
 
     if Student.query.filter_by(roll_no=roll_no).first():
         return jsonify({"error": "Student with this roll number already exists"}), 409
@@ -112,11 +125,16 @@ def register_company():
         error = {"error": "Missing data fields"}
         return jsonify(error), 400
 
-    email = data["email"]
+    email = normalize_text(data["email"]).lower()
     password = data["password"]
     repeat_password = data["repeat_password"]
-    name = data["name"]
+    name = normalize_text(data["name"])
     role = UserRoleEnum.company
+
+    if not validate_email(email):
+        return jsonify({"error": "Enter a valid email address"}), 400
+    if len(name) < 2:
+        return jsonify({"error": "Company name must be at least 2 characters"}), 400
 
     if User.query.filter_by(email=email).first():
         error = {"error": "User already exists"}
@@ -131,7 +149,7 @@ def register_company():
         }, 400
 
     if password != repeat_password:
-        return jsonify({"error": "Password do not match"}), 400
+        return jsonify({"error": "Passwords do not match"}), 400
 
     if Company.query.filter_by(name=name).first():
         return jsonify({"error": "Company with this name already exists"}), 409
@@ -232,9 +250,19 @@ def change_password():
 
 
 def validate_password(password):
+    if not isinstance(password, str):
+        return False
     return (
         len(password) >= 8
         and re.search(r"[A-Z]", password)
         and re.search(r"[a-z]", password)
         and re.search(r"\d", password)
     )
+
+
+def validate_email(email):
+    return isinstance(email, str) and EMAIL_RE.match(email) is not None
+
+
+def normalize_text(value):
+    return value.strip() if isinstance(value, str) else ""

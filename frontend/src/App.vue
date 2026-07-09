@@ -1,7 +1,8 @@
 <script setup>
-import LoginView from "./views/auth/LoginView.vue";
+import PwaInstallPrompt from "@/components/shared/PwaInstallPrompt.vue";
 </script>
 
 <template>
   <router-view />
+  <PwaInstallPrompt />
 </template>

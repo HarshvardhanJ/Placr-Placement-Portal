@@ -9,7 +9,7 @@
           Join to unlock the portal to countless opportunities.
         </p>
 
-        <form @submit.prevent="studentSignup">
+        <form class="needs-validation" novalidate @submit.prevent="studentSignup">
           <div class="mb-3">
             <label class="form-label">Full Name</label>
 
@@ -22,8 +22,12 @@
                 v-model="name"
                 type="text"
                 class="form-control"
+                :class="{ 'is-invalid': submitted && nameError }"
                 placeholder="Your Name"
+                autocomplete="name"
+                required
               />
+              <div class="invalid-feedback">{{ nameError }}</div>
             </div>
           </div>
           <div class="mb-2">
@@ -36,8 +40,12 @@
                 v-model="email"
                 type="email"
                 class="form-control"
+                :class="{ 'is-invalid': submitted && emailError }"
                 placeholder="student@university.ac.in"
+                autocomplete="email"
+                required
               />
+              <div class="invalid-feedback">{{ emailError }}</div>
             </div>
           </div>
 
@@ -51,8 +59,11 @@
                 v-model="roll_no"
                 type="text"
                 class="form-control"
+                :class="{ 'is-invalid': submitted && rollNoError }"
                 placeholder="24CS123"
+                required
               />
+              <div class="invalid-feedback">{{ rollNoError }}</div>
             </div>
           </div>
 
@@ -67,8 +78,12 @@
                   v-model="password"
                   type="password"
                   class="form-control"
+                  :class="{ 'is-invalid': submitted && passwordError }"
                   placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
                 />
+                <div class="invalid-feedback">{{ passwordError }}</div>
               </div>
               <div class="mt-2 small">
                 <div :class="hasMinLength ? 'text-success' : 'text-secondary'">
@@ -104,8 +119,12 @@
                   v-model="confirmPassword"
                   type="password"
                   class="form-control"
+                  :class="{ 'is-invalid': submitted && confirmPasswordError }"
                   placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
                 />
+                <div class="invalid-feedback">{{ confirmPasswordError }}</div>
               </div>
               <div
                 v-if="confirmPassword"
@@ -126,9 +145,9 @@
           <button
             type="submit"
             class="btn btn-primary w-100"
-            :disabled="!passwordValid || !passwordsMatch"
+            :disabled="submitting"
           >
-            Create Account
+            {{ submitting ? "Creating..." : "Create Account" }}
           </button>
         </form>
       </div>
@@ -163,6 +182,9 @@ const roll_no = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const error = ref("");
+const submitted = ref(false);
+const submitting = ref(false);
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const hasMinLength = computed(() => password.value.length >= 8);
 const hasUpperCase = computed(() => /[A-Z]/.test(password.value));
@@ -183,18 +205,45 @@ const passwordValid = computed(
     hasNumber.value,
 );
 
+const nameError = computed(() =>
+  name.value.trim().length >= 2 ? "" : "Full name must be at least 2 characters.",
+);
+const emailError = computed(() => {
+  if (!email.value.trim()) return "Institutional email is required.";
+  if (!emailPattern.test(email.value.trim())) return "Enter a valid email address.";
+  return "";
+});
+const rollNoError = computed(() =>
+  roll_no.value.trim() ? "" : "Roll number is required.",
+);
+const passwordError = computed(() =>
+  passwordValid.value
+    ? ""
+    : "Password must meet all listed requirements.",
+);
+const confirmPasswordError = computed(() =>
+  passwordsMatch.value ? "" : "Passwords must match.",
+);
+const formValid = computed(
+  () =>
+    !nameError.value &&
+    !emailError.value &&
+    !rollNoError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value,
+);
+
 async function studentSignup() {
+  submitted.value = true;
   error.value = "";
 
   try {
-    if (password.value !== confirmPassword.value) {
-      error.value = "Passwords do not match";
-      return;
-    }
-    const response = await api.post("/auth/register/student", {
-      name: name.value,
-      email: email.value,
-      roll_no: roll_no.value,
+    if (!formValid.value) return;
+    submitting.value = true;
+    await api.post("/auth/register/student", {
+      name: name.value.trim(),
+      email: email.value.trim().toLowerCase(),
+      roll_no: roll_no.value.trim(),
       password: password.value,
       repeat_password: confirmPassword.value,
     });
@@ -202,6 +251,8 @@ async function studentSignup() {
   } catch (err) {
     error.value =
       err?.response?.data?.error || `Sign up failed. Please try again.`;
+  } finally {
+    submitting.value = false;
   }
 }
 </script>

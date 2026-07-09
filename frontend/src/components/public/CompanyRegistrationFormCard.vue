@@ -25,7 +25,7 @@
             Company accounts require approval by the placement administrator.
           </div>
         </div>
-        <form @submit.prevent="companySignup">
+        <form class="needs-validation" novalidate @submit.prevent="companySignup">
           <div class="mb-2">
             <label class="form-label">Company Name</label>
             <div class="input-icon">
@@ -41,8 +41,12 @@
                 v-model="companyName"
                 type="text"
                 class="form-control"
+                :class="{ 'is-invalid': submitted && companyNameError }"
                 placeholder="Some Corp"
+                autocomplete="organization"
+                required
               />
+              <div class="invalid-feedback">{{ companyNameError }}</div>
             </div>
           </div>
           <div class="mb-2">
@@ -56,8 +60,12 @@
                 v-model="email"
                 type="email"
                 class="form-control"
+                :class="{ 'is-invalid': submitted && emailError }"
                 placeholder="hr@company.com"
+                autocomplete="email"
+                required
               />
+              <div class="invalid-feedback">{{ emailError }}</div>
             </div>
           </div>
 
@@ -72,8 +80,12 @@
                   v-model="password"
                   type="password"
                   class="form-control"
+                  :class="{ 'is-invalid': submitted && passwordError }"
                   placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
                 />
+                <div class="invalid-feedback">{{ passwordError }}</div>
               </div>
               <div class="mt-2 small">
                 <div :class="hasMinLength ? 'text-success' : 'text-secondary'">
@@ -109,8 +121,12 @@
                   v-model="confirmPassword"
                   type="password"
                   class="form-control"
+                  :class="{ 'is-invalid': submitted && confirmPasswordError }"
                   placeholder="••••••••"
+                  autocomplete="new-password"
+                  required
                 />
+                <div class="invalid-feedback">{{ confirmPasswordError }}</div>
               </div>
               <div
                 v-if="confirmPassword"
@@ -131,9 +147,9 @@
           <button
             type="submit"
             class="btn btn-primary w-100"
-            :disabled="!passwordValid || !passwordsMatch"
+            :disabled="submitting"
           >
-            Register Company
+            {{ submitting ? "Registering..." : "Register Company" }}
           </button>
         </form>
       </div>
@@ -167,6 +183,9 @@ const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const error = ref("");
+const submitted = ref(false);
+const submitting = ref(false);
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const hasMinLength = computed(() => password.value.length >= 8);
 const hasUpperCase = computed(() => /[A-Z]/.test(password.value));
@@ -187,17 +206,42 @@ const passwordValid = computed(
     hasNumber.value,
 );
 
+const companyNameError = computed(() =>
+  companyName.value.trim().length >= 2
+    ? ""
+    : "Company name must be at least 2 characters.",
+);
+const emailError = computed(() => {
+  if (!email.value.trim()) return "Company email is required.";
+  if (!emailPattern.test(email.value.trim())) return "Enter a valid email address.";
+  return "";
+});
+const passwordError = computed(() =>
+  passwordValid.value
+    ? ""
+    : "Password must meet all listed requirements.",
+);
+const confirmPasswordError = computed(() =>
+  passwordsMatch.value ? "" : "Passwords must match.",
+);
+const formValid = computed(
+  () =>
+    !companyNameError.value &&
+    !emailError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value,
+);
+
 async function companySignup() {
+  submitted.value = true;
   error.value = "";
 
   try {
-    if (password.value !== confirmPassword.value) {
-      error.value = "Passwords do not match";
-      return;
-    }
-    const response = await api.post("/auth/register/company", {
-      name: companyName.value,
-      email: email.value,
+    if (!formValid.value) return;
+    submitting.value = true;
+    await api.post("/auth/register/company", {
+      name: companyName.value.trim(),
+      email: email.value.trim().toLowerCase(),
       password: password.value,
       repeat_password: confirmPassword.value,
     });
@@ -205,6 +249,8 @@ async function companySignup() {
   } catch (err) {
     error.value =
       err?.response?.data?.error || `Sign up failed. Please try again.`;
+  } finally {
+    submitting.value = false;
   }
 }
 </script>

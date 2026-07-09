@@ -17,6 +17,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-layout-dashboard"></i>
         <span>Dashboard</span>
@@ -27,6 +28,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-building"></i>
         <span>Companies</span>
@@ -37,6 +39,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-users"></i>
         <span>Students</span>
@@ -47,6 +50,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-briefcase"></i>
         <span>Drives</span>
@@ -57,6 +61,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-file-text"></i>
         <span>Applications</span>
@@ -67,6 +72,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-chart-bar"></i>
         <span>Analytics</span>
@@ -77,6 +83,7 @@
         class="sidebar-link"
         active-class="is-active"
         exact-active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i class="ti ti-report-analytics"></i>
         <span>Reports</span>
@@ -142,6 +149,8 @@ const adminStore = useAdminStore();
 const router = useRouter();
 const authStore = useAuthStore();
 const { stats } = storeToRefs(adminStore);
+
+defineEmits(["navigate"]);
 
 const logout = () => {
   if (!window.confirm("Are you sure you want to logout?")) {
@@ -334,8 +343,17 @@ const logout = () => {
 
 @media (max-width: 991.98px) {
   .admin-sidebar {
-    width: 100%;
-    min-height: auto;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    width: min(300px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 16px 0 40px rgba(15, 23, 42, 0.18);
+  }
+
+  .admin-sidebar.is-open {
+    transform: translateX(0);
   }
 }
 </style>

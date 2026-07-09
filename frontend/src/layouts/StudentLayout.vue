@@ -1,10 +1,19 @@
 <template>
   <div class="student-layout">
-    <StudentSidebar />
+    <div
+      v-if="sidebarOpen"
+      class="student-sidebar-backdrop"
+      @click="sidebarOpen = false"
+    ></div>
+    <StudentSidebar
+      :class="{ 'is-open': sidebarOpen }"
+      @navigate="sidebarOpen = false"
+    />
     <div class="student-main">
       <StudentTopbar
         :search-query="searchQuery"
         :show-search="showSearch"
+        @toggle-sidebar="sidebarOpen = true"
         @update:search-query="$emit('update:searchQuery', $event)"
       />
       <main class="student-content">
@@ -17,8 +26,11 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import StudentSidebar from "@/components/student/StudentSidebar.vue";
 import StudentTopbar from "@/components/student/StudentTopbar.vue";
+
+const sidebarOpen = ref(false);
 
 defineProps({
   searchQuery: {
@@ -51,6 +63,7 @@ defineEmits(["update:searchQuery"]);
 .student-content {
   flex: 1;
   padding: 1.5rem;
+  min-width: 0;
 }
 
 .student-page {
@@ -58,12 +71,21 @@ defineEmits(["update:searchQuery"]);
 }
 
 @media (max-width: 991.98px) {
-  .student-layout {
-    flex-direction: column;
-  }
-
   .student-content {
     padding: 1rem;
+  }
+
+  .student-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1030;
+    background: rgba(15, 23, 42, 0.38);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .student-content {
+    padding: 0.75rem;
   }
 }
 </style>

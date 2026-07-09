@@ -11,15 +11,19 @@
         <h2 class="fw-bold text-center mb-2">Sign In</h2>
         <p class="text-center text-secondary mb-4">Access your dashboard</p>
 
-        <form @submit.prevent="login">
+        <form class="needs-validation" novalidate @submit.prevent="login">
           <div class="mb-3">
             <label class="form-label">Email Address</label>
             <input
               v-model="email"
               type="email"
               class="form-control"
+              :class="{ 'is-invalid': submitted && emailError }"
               placeholder="you@example.com"
+              autocomplete="email"
+              required
             />
+            <div class="invalid-feedback">{{ emailError }}</div>
           </div>
 
           <div class="mb-3">
@@ -28,8 +32,12 @@
               v-model="password"
               type="password"
               class="form-control"
+              :class="{ 'is-invalid': submitted && passwordError }"
               placeholder="••••••••"
+              autocomplete="current-password"
+              required
             />
+            <div class="invalid-feedback">{{ passwordError }}</div>
           </div>
 
           <div class="d-flex justify-content-between align-items-center mb-4">
@@ -60,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import api from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
@@ -72,9 +80,23 @@ const authStore = useAuthStore();
 const email = ref("");
 const password = ref("");
 const error = ref("");
+const submitted = ref(false);
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailError = computed(() => {
+  if (!email.value.trim()) return "Email is required.";
+  if (!emailPattern.test(email.value.trim())) return "Enter a valid email address.";
+  return "";
+});
+const passwordError = computed(() =>
+  password.value ? "" : "Password is required.",
+);
 
 async function login() {
+  submitted.value = true;
   error.value = "";
+
+  if (emailError.value || passwordError.value) return;
 
   try {
     const response = await api.post("/auth/login", {

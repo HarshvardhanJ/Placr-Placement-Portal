@@ -1,5 +1,14 @@
 <template>
   <header class="topbar">
+    <button
+      type="button"
+      class="btn btn-outline-secondary menu-btn"
+      aria-label="Open navigation"
+      @click="$emit('toggleSidebar')"
+    >
+      <i class="ti ti-menu-2"></i>
+    </button>
+
     <div v-if="showSearch" class="topbar-left">
       <div class="search-box">
         <i class="ti ti-search"></i>
@@ -41,7 +50,7 @@ defineProps({
   },
 });
 
-defineEmits(["update:searchQuery"]);
+defineEmits(["update:searchQuery", "toggleSidebar"]);
 </script>
 
 <style scoped>
@@ -55,6 +64,16 @@ defineEmits(["update:searchQuery"]);
   justify-content: space-between;
 
   padding: 0 1.5rem;
+  gap: 1rem;
+}
+
+.menu-btn {
+  display: none;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .topbar-left {
@@ -179,12 +198,33 @@ defineEmits(["update:searchQuery"]);
 }
 
 @media (max-width: 768px) {
+  .topbar {
+    height: auto;
+    min-height: 64px;
+    padding: 0.75rem;
+  }
+
+  .menu-btn {
+    display: grid;
+  }
+
   .search-box {
-    width: 220px;
+    width: 100%;
   }
 
   .user-info {
     display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar-left {
+    flex: 1 0 calc(100% - 56px);
+    order: 3;
   }
 }
 </style>

@@ -18,6 +18,7 @@
         :to="item.to"
         class="sidebar-link"
         active-class="is-active"
+        @click="$emit('navigate')"
       >
         <i :class="['ti', item.icon]"></i>
         <span>{{ item.label }}</span>
@@ -52,6 +53,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const studentStore = useStudentStore();
 const { profile } = storeToRefs(studentStore);
+
+defineEmits(["navigate"]);
 
 onMounted(() => {
   if (!profile.value) {
@@ -251,8 +254,17 @@ const logout = () => {
 
 @media (max-width: 991.98px) {
   .student-sidebar {
-    width: 100%;
-    min-height: auto;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    width: min(300px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 16px 0 40px rgba(15, 23, 42, 0.18);
+  }
+
+  .student-sidebar.is-open {
+    transform: translateX(0);
   }
 }
 </style>
