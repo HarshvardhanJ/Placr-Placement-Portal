@@ -7,7 +7,8 @@
           <div class="auth-column col-lg-6 h-100">
             <AuthHeroPanel />
           </div>
-          <div class="auth-column col-lg-6 h-100">
+
+          <div class="auth-column col-lg-6 h-100 auth-form-side">
             <slot />
           </div>
         </div>
@@ -30,12 +31,17 @@ import AuthHeroPanel from "@/components/public/AuthHeroPanel.vue";
   height: calc(100vh - 112px);
   min-height: 0;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .auth-main > .container-fluid,
 .auth-row,
 .auth-column {
   min-height: 100%;
+}
+
+.auth-form-side {
+  background: #fff;
 }
 
 @media (max-width: 991.98px) {

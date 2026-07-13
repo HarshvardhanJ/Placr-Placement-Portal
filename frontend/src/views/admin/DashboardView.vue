@@ -44,22 +44,9 @@
       </div>
     </div>
 
-    <div class="row g-3 mb-4">
-      <div
-        v-for="stat in stats"
-        :key="stat.title"
-        class="col-12 col-sm-6 col-xl-3"
-      >
-        <StatCard :title="stat.title" :value="stat.value" />
-      </div>
-    </div>
-
     <div class="row g-4 mb-4">
       <div class="col-xl-8">
-        <ActionList
-          title="Pending Approvals"
-          :items="filteredPending"
-        />
+        <ActionList title="Pending Approvals" :items="filteredPending" />
       </div>
 
       <div class="col-xl-4">
@@ -104,6 +91,7 @@ import DataTable from "@/components/shared/DataTable.vue";
 import RecentActivity from "@/components/shared/RecentActivity.vue";
 import ActionList from "@/components/shared/ActionsList.vue";
 import PageHeader from "@/components/shared/PageHeader.vue";
+import BaseChart from "@/components/shared/BaseChart.vue";
 import api from "@/services/api";
 
 const loading = ref(false);
@@ -162,6 +150,77 @@ const stats = computed(() => [
     value: dashboard.value.stats.applications,
   },
 ]);
+
+const analytics = computed(() => dashboard.value.analytics || {});
+const monthly = computed(() => analytics.value.monthly || []);
+const funnel = computed(() => analytics.value.application_funnel || {});
+
+const monthlyChartData = computed(() => ({
+  labels: monthly.value.map((item) => item.label),
+  datasets: [
+    {
+      label: "Applications",
+      data: monthly.value.map((item) => item.applications),
+      borderColor: "#2563eb",
+      backgroundColor: "rgba(37, 99, 235, 0.12)",
+      tension: 0.35,
+      fill: true,
+    },
+    {
+      label: "Placements",
+      data: monthly.value.map((item) => item.placements),
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16, 185, 129, 0.12)",
+      tension: 0.35,
+      fill: true,
+    },
+  ],
+}));
+
+const funnelChartData = computed(() => ({
+  labels: ["Applied", "Shortlisted", "Selected", "Rejected"],
+  datasets: [
+    {
+      data: [
+        funnel.value.applied || 0,
+        funnel.value.shortlisted || 0,
+        funnel.value.selected || 0,
+        funnel.value.rejected || 0,
+      ],
+      backgroundColor: ["#2563eb", "#f59e0b", "#10b981", "#ef4444"],
+      borderColor: "#ffffff",
+      borderWidth: 4,
+      hoverOffset: 6,
+    },
+  ],
+}));
+
+const lineChartOptions = {
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: { usePointStyle: true, boxWidth: 8 },
+    },
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: { precision: 0 },
+      grid: { color: "#eef2f7" },
+    },
+    x: { grid: { display: false } },
+  },
+};
+
+const doughnutChartOptions = {
+  cutout: "62%",
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: { usePointStyle: true, boxWidth: 8 },
+    },
+  },
+};
 
 const normalize = (value = "") => String(value || "").toLowerCase();
 
@@ -256,6 +315,10 @@ onMounted(() => {
   transform: translateY(-1px);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
   border-color: #cfe0ff;
+}
+
+.dashboard-chart {
+  border-radius: 1rem;
 }
 
 @media (max-width: 991.98px) {

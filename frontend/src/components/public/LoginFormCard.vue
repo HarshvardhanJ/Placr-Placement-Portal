@@ -42,7 +42,12 @@
 
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="rememberMe" />
+              <input
+                v-model="rememberMe"
+                class="form-check-input"
+                type="checkbox"
+                id="rememberMe"
+              />
               <label class="form-check-label" for="rememberMe">
                 Remember me
               </label>
@@ -68,7 +73,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import api from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
@@ -81,6 +86,8 @@ const email = ref("");
 const password = ref("");
 const error = ref("");
 const submitted = ref(false);
+const rememberMe = ref(false);
+const rememberedEmailKey = "placr_remembered_email";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const emailError = computed(() => {
@@ -108,6 +115,12 @@ async function login() {
 
     authStore.login(response.data.token, role);
 
+    if (rememberMe.value) {
+      localStorage.setItem(rememberedEmailKey, email.value.trim());
+    } else {
+      localStorage.removeItem(rememberedEmailKey);
+    }
+
     if (role === "admin") {
       router.push("/admin");
     } else if (role === "company") {
@@ -120,6 +133,14 @@ async function login() {
       err?.response?.data?.error || "Login failed. Please try again.";
   }
 }
+
+onMounted(() => {
+  const savedEmail = localStorage.getItem(rememberedEmailKey);
+  if (savedEmail) {
+    email.value = savedEmail;
+    rememberMe.value = true;
+  }
+});
 </script>
 
 <style scoped>

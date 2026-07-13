@@ -156,6 +156,13 @@
         </DataTable>
       </template>
 
+      <template v-else-if="activeTab === 'ats'">
+        <ResumeScreenerPanel
+          title="Screen applicants against a role"
+          subtitle="Paste job criteria and resume text to estimate role fit before shortlisting."
+        />
+      </template>
+
       <template v-else>
         <CompanyReportsPanel />
       </template>
@@ -175,6 +182,7 @@ import CompanyJobsTable from "@/components/company/CompanyJobsTable.vue";
 import RecentApplicantsPanel from "@/components/company/RecentApplicantsPanel.vue";
 import CompanyAnalyticsPanel from "@/components/company/CompanyAnalyticsPanel.vue";
 import CompanyReportsPanel from "@/components/company/CompanyReportsPanel.vue";
+import ResumeScreenerPanel from "@/components/shared/ResumeScreenerPanel.vue";
 
 const store = useCompanyStore();
 
@@ -185,6 +193,7 @@ const tabs = [
   { key: "overview", label: "Overview" },
   { key: "analytics", label: "Analytics" },
   { key: "placements", label: "Placements" },
+  { key: "ats", label: "ATS Screener" },
   { key: "reports", label: "Reports" },
 ];
 

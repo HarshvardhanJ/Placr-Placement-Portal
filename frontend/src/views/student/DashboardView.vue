@@ -92,6 +92,13 @@
       <StudentAnalyticsPanel />
     </template>
 
+    <template v-else-if="activeTab === 'ats'">
+      <ResumeScreenerPanel
+        title="Check your resume against a target role"
+        subtitle="Compare your resume with drive requirements before applying."
+      />
+    </template>
+
     <template v-else>
       <StudentReportsPanel />
     </template>
@@ -109,6 +116,7 @@ import StudentUpcomingActions from "@/components/student/StudentUpcomingActions.
 import StudentActivityFeed from "@/components/student/StudentActivityFeed.vue";
 import StudentAnalyticsPanel from "@/components/student/StudentAnalyticsPanel.vue";
 import StudentReportsPanel from "@/components/student/StudentReportsPanel.vue";
+import ResumeScreenerPanel from "@/components/shared/ResumeScreenerPanel.vue";
 import { useStudentStore } from "@/stores/studentStore";
 
 const store = useStudentStore();
@@ -120,6 +128,7 @@ const activeTab = ref("overview");
 const tabs = [
   { key: "overview", label: "Overview" },
   { key: "analytics", label: "Analytics" },
+  { key: "ats", label: "ATS Screener" },
   { key: "reports", label: "Reports" },
 ];
 

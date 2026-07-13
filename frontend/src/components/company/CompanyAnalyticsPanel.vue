@@ -39,22 +39,13 @@
             </div>
 
             <template v-if="hasFunnelData">
-              <div v-for="item in funnel" :key="item.label" class="mb-3">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span>{{ item.label }}</span>
-                  <span class="text-muted">{{ item.value }}</span>
-                </div>
-                <div class="progress funnel-progress">
-                  <div
-                    class="progress-bar"
-                    role="progressbar"
-                    :style="{ width: `${item.width}%` }"
-                    :aria-valuenow="item.value"
-                    aria-valuemin="0"
-                    :aria-valuemax="funnelMax"
-                  ></div>
-                </div>
-              </div>
+              <BaseChart
+                type="bar"
+                :data="funnelChartData"
+                :options="barChartOptions"
+                :height="360"
+                aria-label="Company application funnel chart"
+              />
             </template>
 
             <div v-else class="empty-state">
@@ -73,27 +64,13 @@
             <h6 class="fw-semibold mb-3">Drive Status Mix</h6>
 
             <template v-if="hasDriveData">
-              <div
-                v-for="item in driveBreakdown"
-                :key="item.label"
-                class="mb-3"
-              >
-                <div class="d-flex justify-content-between small mb-1">
-                  <span>{{ item.label }}</span>
-                  <span class="text-muted">{{ item.count }}</span>
-                </div>
-                <div class="progress status-progress">
-                  <div
-                    class="progress-bar"
-                    :class="item.barClass"
-                    role="progressbar"
-                    :style="{ width: `${item.width}%` }"
-                    :aria-valuenow="item.count"
-                    aria-valuemin="0"
-                    :aria-valuemax="driveTotal"
-                  ></div>
-                </div>
-              </div>
+              <BaseChart
+                type="doughnut"
+                :data="driveChartData"
+                :options="doughnutChartOptions"
+                :height="320"
+                aria-label="Company drive status mix chart"
+              />
 
               <div class="pt-2 border-top mt-3">
                 <small class="text-muted">
@@ -121,6 +98,7 @@
 import { computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useCompanyStore } from "@/stores/companyStore";
+import BaseChart from "@/components/shared/BaseChart.vue";
 
 const store = useCompanyStore();
 const { dashboard } = storeToRefs(store);
@@ -154,47 +132,28 @@ const cards = computed(() => [
 const totalApplications = computed(() =>
   Number(stats.value.total_applications || 0),
 );
-const funnelMax = computed(() => Math.max(totalApplications.value, 1));
 const hasFunnelData = computed(() => totalApplications.value > 0);
 
-const clampPercent = (value) => {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  return Math.min(100, Math.max(0, value));
-};
-
 const funnel = computed(() => {
-  const total = totalApplications.value;
-  if (!total) {
-    return [
-      { label: "Applied", value: 0, width: 0 },
-      { label: "Shortlisted", value: 0, width: 0 },
-      { label: "Selected", value: 0, width: 0 },
-    ];
-  }
-
   const shortlisted = Number(stats.value.interviews_scheduled || 0);
   const selected = Number(stats.value.offers_made || 0);
 
   return [
     {
       label: "Applied",
-      value: total,
-      width: 100,
+      value: totalApplications.value,
     },
     {
       label: "Shortlisted",
       value: shortlisted,
-      width: clampPercent((shortlisted / total) * 100),
     },
     {
       label: "Selected",
       value: selected,
-      width: clampPercent((selected / total) * 100),
     },
   ];
 });
 
-const driveTotal = computed(() => Math.max(drives.value.length, 1));
 const hasDriveData = computed(() => drives.value.length > 0);
 
 const driveBreakdown = computed(() => {
@@ -212,23 +171,69 @@ const driveBreakdown = computed(() => {
     {
       label: "Active",
       count: active,
-      width: clampPercent((active / driveTotal.value) * 100),
-      barClass: "bg-primary",
     },
     {
       label: "Interviewing",
       count: interviewing,
-      width: clampPercent((interviewing / driveTotal.value) * 100),
-      barClass: "bg-info",
     },
     {
       label: "Shortlisting",
       count: shortlisting,
-      width: clampPercent((shortlisting / driveTotal.value) * 100),
-      barClass: "bg-warning",
     },
   ];
 });
+
+const funnelChartData = computed(() => ({
+  labels: funnel.value.map((item) => item.label),
+  datasets: [
+    {
+      label: "Candidates",
+      data: funnel.value.map((item) => item.value),
+      backgroundColor: ["#2563eb", "#06b6d4", "#10b981"],
+      borderRadius: 8,
+      maxBarThickness: 54,
+    },
+  ],
+}));
+
+const driveChartData = computed(() => ({
+  labels: driveBreakdown.value.map((item) => item.label),
+  datasets: [
+    {
+      data: driveBreakdown.value.map((item) => item.count),
+      backgroundColor: ["#2563eb", "#06b6d4", "#f59e0b"],
+      borderColor: "#ffffff",
+      borderWidth: 4,
+      hoverOffset: 6,
+    },
+  ],
+}));
+
+const barChartOptions = {
+  plugins: {
+    legend: { display: false },
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: { precision: 0 },
+      grid: { color: "#eef2f7" },
+    },
+    x: {
+      grid: { display: false },
+    },
+  },
+};
+
+const doughnutChartOptions = {
+  cutout: "62%",
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: { usePointStyle: true, boxWidth: 8 },
+    },
+  },
+};
 
 const openDrives = computed(
   () => drives.value.filter((drive) => drive.status === "active").length,

@@ -1,3 +1,5 @@
+from collections import Counter
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 from app.models.user import UserRoleEnum
 from app.utils.decorators import role_required
@@ -6,7 +8,8 @@ from app.models.student import Student
 from app.models.company import Company, CompanyStatusEnum
 from app.models.drive import Drive, DriveStatusEnum
 from app.extensions import db, cache
-from app.models.application import Application
+from app.models.application import Application, ApplicationStatusEnum
+from app.models.placement import Placement
 from app.utils.cache_helper import clear_cache_pattern
 
 
@@ -44,6 +47,40 @@ def admin_dashboard():
     recent_companies = Company.query.order_by(Company.created_at.desc()).limit(3).all()
 
     recent_drives = Drive.query.order_by(Drive.created_at.desc()).limit(3).all()
+    all_drives = Drive.query.all()
+    all_applications = Application.query.all()
+    all_placements = Placement.query.all()
+
+    month_keys = []
+    now = datetime.utcnow()
+    for offset in range(5, -1, -1):
+        month = now.month - offset
+        year = now.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        month_keys.append((year, month))
+
+    def month_label(year, month):
+        return datetime(year, month, 1).strftime("%b")
+
+    placement_counts = Counter(
+        (placement.created_at.year, placement.created_at.month)
+        for placement in all_placements
+        if placement.created_at
+    )
+    application_counts = Counter(
+        (application.application_date.year, application.application_date.month)
+        for application in all_applications
+        if application.application_date
+    )
+
+    skill_counts = Counter()
+    for drive in all_drives:
+        for skill in (drive.required_skills or "").replace(";", ",").split(","):
+            cleaned = skill.strip()
+            if cleaned:
+                skill_counts[cleaned] += 1
 
     return jsonify(
         {
@@ -108,6 +145,34 @@ def admin_dashboard():
                 }
                 for d in recent_drives
             ],
+            "analytics": {
+                "monthly": [
+                    {
+                        "label": month_label(year, month),
+                        "placements": placement_counts[(year, month)],
+                        "applications": application_counts[(year, month)],
+                    }
+                    for year, month in month_keys
+                ],
+                "skill_demand": [
+                    {"skill": skill, "count": count}
+                    for skill, count in skill_counts.most_common(8)
+                ],
+                "application_funnel": {
+                    "applied": Application.query.filter(
+                        Application.status == ApplicationStatusEnum.applied
+                    ).count(),
+                    "shortlisted": Application.query.filter(
+                        Application.status == ApplicationStatusEnum.shortlisted
+                    ).count(),
+                    "selected": Application.query.filter(
+                        Application.status == ApplicationStatusEnum.selected
+                    ).count(),
+                    "rejected": Application.query.filter(
+                        Application.status == ApplicationStatusEnum.rejected
+                    ).count(),
+                },
+            },
         }
     ), 200
 

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-
+import socket
 from app.extensions import mail
 from flask_mail import Message
 from flask import render_template_string
@@ -7,6 +7,8 @@ from app.models.application import Application
 from app.models.drive import Drive
 from app.models.student import Student
 from datetime import timedelta
+
+socket.setdefaulttimeout(10)
 
 
 def send_interview_reminder(student: Student, drive: Drive, application: Application):

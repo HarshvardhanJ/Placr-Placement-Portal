@@ -18,6 +18,12 @@ const defaultDashboard = {
 const hasValue = (value) =>
   value !== null && value !== undefined && String(value).trim() !== "";
 
+const hasUploadedResume = (profile) =>
+  Boolean(profile?.resume_uploaded) ||
+  hasValue(profile?.resume_path) ||
+  hasValue(profile?.resume_url) ||
+  hasValue(profile?.resume);
+
 const normalizeProfile = (profile) => {
   if (!profile) return null;
   return {
@@ -68,11 +74,7 @@ export const useStudentStore = defineStore("student", {
     },
 
     hasResume(state) {
-      return Boolean(
-        state.profile?.resume_path ||
-          state.profile?.resume_url ||
-          state.profile?.resume,
-      );
+      return hasUploadedResume(state.profile);
     },
 
     profileComplete(state) {
@@ -119,11 +121,7 @@ export const useStudentStore = defineStore("student", {
     },
 
     reportCards(state) {
-      const resumeUploaded = Boolean(
-        state.profile?.resume_path ||
-          state.profile?.resume_url ||
-          state.profile?.resume,
-      );
+      const resumeUploaded = hasUploadedResume(state.profile);
       const applications = state.dashboard?.counts?.applied || 0;
       const placements = state.dashboard?.counts?.selected || 0;
 

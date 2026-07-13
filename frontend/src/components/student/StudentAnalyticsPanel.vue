@@ -55,22 +55,12 @@
             </div>
 
             <template v-if="hasFunnelData">
-              <div v-for="item in funnel" :key="item.label" class="mb-3">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span class="fw-medium">{{ item.label }}</span>
-                  <span class="text-muted">{{ item.value }}</span>
-                </div>
-                <div class="progress progress-soft">
-                  <div
-                    class="progress-bar"
-                    role="progressbar"
-                    :style="{ width: `${item.width}%` }"
-                    :aria-valuenow="item.value"
-                    aria-valuemin="0"
-                    :aria-valuemax="funnelMax"
-                  ></div>
-                </div>
-              </div>
+              <BaseChart
+                type="bar"
+                :data="funnelChartData"
+                :options="barChartOptions"
+                aria-label="Student application funnel chart"
+              />
             </template>
 
             <StudentEmptyState
@@ -97,27 +87,12 @@
             </div>
 
             <template v-if="hasStatusData">
-              <div
-                v-for="item in statusBreakdown"
-                :key="item.label"
-                class="mb-3"
-              >
-                <div class="d-flex justify-content-between small mb-1">
-                  <span class="fw-medium">{{ item.label }}</span>
-                  <span class="text-muted">{{ item.count }}</span>
-                </div>
-                <div class="progress progress-soft">
-                  <div
-                    class="progress-bar"
-                    :class="item.barClass"
-                    role="progressbar"
-                    :style="{ width: `${item.width}%` }"
-                    :aria-valuenow="item.count"
-                    aria-valuemin="0"
-                    :aria-valuemax="statusTotal"
-                  ></div>
-                </div>
-              </div>
+              <BaseChart
+                type="doughnut"
+                :data="statusChartData"
+                :options="doughnutChartOptions"
+                aria-label="Student application status mix chart"
+              />
 
               <div class="pt-3 border-top mt-3">
                 <div class="d-flex flex-wrap gap-3 small text-muted">
@@ -193,6 +168,7 @@
 import { computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useStudentStore } from "@/stores/studentStore";
+import BaseChart from "@/components/shared/BaseChart.vue";
 import StudentEmptyState from "./StudentEmptyState.vue";
 
 const store = useStudentStore();
@@ -233,14 +209,7 @@ const cards = computed(() => [
 ]);
 
 const totalApplications = computed(() => appliedCount.value);
-const funnelMax = computed(() => Math.max(totalApplications.value, 1));
 const hasFunnelData = computed(() => totalApplications.value > 0);
-const statusTotal = computed(() =>
-  Math.max(
-    appliedCount.value + shortlistedCount.value + selectedCount.value,
-    1,
-  ),
-);
 const hasStatusData = computed(
   () =>
     appliedCount.value > 0 ||
@@ -248,56 +217,65 @@ const hasStatusData = computed(
     selectedCount.value > 0,
 );
 
-const clampPercent = (value) => {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  return Math.min(100, Math.max(0, value));
-};
-
 const funnel = computed(() => {
-  const total = totalApplications.value;
-  if (!total) {
-    return [
-      { label: "Applied", value: 0, width: 0 },
-      { label: "Shortlisted", value: 0, width: 0 },
-      { label: "Selected", value: 0, width: 0 },
-    ];
-  }
-
   return [
-    { label: "Applied", value: total, width: 100 },
-    {
-      label: "Shortlisted",
-      value: shortlistedCount.value,
-      width: clampPercent((shortlistedCount.value / total) * 100),
-    },
-    {
-      label: "Selected",
-      value: selectedCount.value,
-      width: clampPercent((selectedCount.value / total) * 100),
-    },
+    { label: "Applied", value: totalApplications.value },
+    { label: "Shortlisted", value: shortlistedCount.value },
+    { label: "Selected", value: selectedCount.value },
   ];
 });
 
-const statusBreakdown = computed(() => [
-  {
-    label: "Applied",
-    count: appliedCount.value,
-    width: clampPercent((appliedCount.value / statusTotal.value) * 100),
-    barClass: "bg-primary",
+const funnelChartData = computed(() => ({
+  labels: funnel.value.map((item) => item.label),
+  datasets: [
+    {
+      label: "Applications",
+      data: funnel.value.map((item) => item.value),
+      backgroundColor: ["#2563eb", "#f59e0b", "#10b981"],
+      borderRadius: 8,
+      maxBarThickness: 54,
+    },
+  ],
+}));
+
+const statusChartData = computed(() => ({
+  labels: ["Applied", "Shortlisted", "Selected"],
+  datasets: [
+    {
+      data: [appliedCount.value, shortlistedCount.value, selectedCount.value],
+      backgroundColor: ["#2563eb", "#f59e0b", "#10b981"],
+      borderColor: "#ffffff",
+      borderWidth: 4,
+      hoverOffset: 6,
+    },
+  ],
+}));
+
+const barChartOptions = {
+  plugins: {
+    legend: { display: false },
   },
-  {
-    label: "Shortlisted",
-    count: shortlistedCount.value,
-    width: clampPercent((shortlistedCount.value / statusTotal.value) * 100),
-    barClass: "bg-warning",
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: { precision: 0 },
+      grid: { color: "#eef2f7" },
+    },
+    x: {
+      grid: { display: false },
+    },
   },
-  {
-    label: "Selected",
-    count: selectedCount.value,
-    width: clampPercent((selectedCount.value / statusTotal.value) * 100),
-    barClass: "bg-success",
+};
+
+const doughnutChartOptions = {
+  cutout: "62%",
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: { usePointStyle: true, boxWidth: 8 },
+    },
   },
-]);
+};
 </script>
 
 <style scoped>

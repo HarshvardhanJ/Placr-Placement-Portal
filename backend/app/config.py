@@ -29,3 +29,4 @@ class Config:
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_USE_TLS = True
     MAIL_DEFAULT_SENDER = "onboarding@resend.dev"
+    MAIL_TIMEOUT = int(os.environ.get("MAIL_TIMEOUT", 10))

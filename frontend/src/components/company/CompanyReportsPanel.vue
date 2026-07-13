@@ -61,7 +61,9 @@ const exportTaskId = ref("");
 const exportState = ref("");
 const exportMessage = ref("");
 const exportError = ref(false);
+const exportStartedAt = ref(0);
 let pollTimer = null;
+const EXPORT_POLL_TIMEOUT_MS = 120000;
 
 const exportBusy = computed(() =>
   ["PENDING", "STARTED", "RETRY"].includes(exportState.value),
@@ -131,6 +133,18 @@ const pollExportStatus = async () => {
   if (!exportTaskId.value) return;
 
   try {
+    if (
+      exportStartedAt.value &&
+      Date.now() - exportStartedAt.value > EXPORT_POLL_TIMEOUT_MS
+    ) {
+      stopPolling();
+      exportError.value = true;
+      exportState.value = "";
+      exportMessage.value =
+        "CSV export is taking longer than expected. Please try again in a moment.";
+      return;
+    }
+
     const status = await store.getExportStatus(exportTaskId.value);
     exportState.value = status.state;
 
@@ -146,6 +160,7 @@ const pollExportStatus = async () => {
       exportError.value = false;
       exportMessage.value = "CSV export is ready and has been downloaded.";
       exportState.value = "";
+      exportStartedAt.value = 0;
       return;
     }
 
@@ -154,6 +169,7 @@ const pollExportStatus = async () => {
       exportError.value = true;
       exportMessage.value = "Export job failed. Please try again.";
       exportState.value = "";
+      exportStartedAt.value = 0;
       return;
     }
 
@@ -163,6 +179,7 @@ const pollExportStatus = async () => {
     stopPolling();
     exportError.value = true;
     exportState.value = "";
+    exportStartedAt.value = 0;
     exportMessage.value =
       error?.response?.data?.error || error?.message || "Failed to check export status.";
   }
@@ -172,6 +189,7 @@ const startExport = async () => {
   stopPolling();
   exportError.value = false;
   exportState.value = "PENDING";
+  exportStartedAt.value = Date.now();
   exportMessage.value = "Starting CSV export...";
 
   try {
@@ -182,6 +200,7 @@ const startExport = async () => {
   } catch (error) {
     exportError.value = true;
     exportState.value = "";
+    exportStartedAt.value = 0;
     exportMessage.value =
       error?.response?.data?.error || error?.message || "Failed to start export.";
   }
