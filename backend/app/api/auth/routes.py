@@ -4,6 +4,7 @@ from app.extensions import bcrypt, db
 from app.models.company import Company
 from app.models.student import Student
 from app.models.user import User, UserRoleEnum
+from app.utils.cache_helper import clear_cache_pattern
 import re
 
 auth_bp = Blueprint("auth_bp", __name__)
@@ -104,6 +105,7 @@ def register_student():
         student = Student(user_id=user.user_id, name=name, roll_no=roll_no)
         db.session.add(student)
         db.session.commit()
+        clear_cache_pattern("admin_")
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Registration failed", "details": str(e)}), 500
@@ -163,6 +165,7 @@ def register_company():
         company = Company(user_id=user.user_id, name=name)
         db.session.add(company)
         db.session.commit()
+        clear_cache_pattern("admin_")
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Registration failed", "details": str(e)}), 500
