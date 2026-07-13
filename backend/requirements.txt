@@ -1,9 +1,10 @@
-flask
-flask_sqlalchemy
-flask_bcrypt
-flask-cors
-flask-jwt-extended
+Flask
+Flask-Bcrypt
+Flask-Caching
+Flask-Cors
+Flask-JWT-Extended
+Flask-Mail
+Flask-SQLAlchemy
 celery
 redis
-Flask-Caching
-flask-mail
+python-dotenv
