@@ -77,17 +77,6 @@
         <i class="ti ti-chart-bar"></i>
         <span>Analytics</span>
       </RouterLink>
-
-      <RouterLink
-        to="/admin/reports"
-        class="sidebar-link"
-        active-class="is-active"
-        exact-active-class="is-active"
-        @click="$emit('navigate')"
-      >
-        <i class="ti ti-report-analytics"></i>
-        <span>Reports</span>
-      </RouterLink>
     </nav>
 
     <div class="sidebar-divider"></div>

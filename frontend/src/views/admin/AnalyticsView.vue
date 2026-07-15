@@ -4,11 +4,6 @@
       title="Analytics"
       subtitle="Placement trends, funnel metrics, and activity snapshots."
     >
-      <template #actions>
-        <RouterLink to="/admin/reports" class="btn btn-outline-primary">
-          <i class="ti ti-report-analytics me-2"></i>Reports
-        </RouterLink>
-      </template>
     </PageHeader>
 
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
@@ -36,7 +31,9 @@
             <div class="d-flex justify-content-between gap-3 mb-4">
               <div>
                 <h6 class="fw-semibold mb-1">Placement Trends</h6>
-                <small class="text-muted">Applications and placements over the last six months</small>
+                <small class="text-muted"
+                  >Applications and placements over the last six months</small
+                >
               </div>
               <span class="pill-label">Monthly</span>
             </div>
@@ -73,10 +70,15 @@
       <div class="col-12">
         <div class="analytics-panel card shadow-sm border-0">
           <div class="card-body p-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+            <div
+              class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4"
+            >
               <div>
                 <h6 class="fw-semibold mb-1">Job Demand by Skills</h6>
-                <small class="text-muted">Most requested skills from active and historical drives</small>
+                <small class="text-muted"
+                  >Most requested skills from active and historical
+                  drives</small
+                >
               </div>
               <span class="pill-label">Top {{ skillDemand.length || 0 }}</span>
             </div>
@@ -90,7 +92,9 @@
             <div v-else class="empty-state">
               <i class="ti ti-chart-bar-off"></i>
               <div class="fw-semibold">No skill demand data yet</div>
-              <small class="text-muted">Required skills will appear once drives include them.</small>
+              <small class="text-muted"
+                >Required skills will appear once drives include them.</small
+              >
             </div>
           </div>
         </div>
@@ -137,7 +141,9 @@ const cards = computed(() => [
   },
   {
     title: "Approvals",
-    value: Number(stats.value.pending_companies || 0) + Number(stats.value.pending_drives || 0),
+    value:
+      Number(stats.value.pending_companies || 0) +
+      Number(stats.value.pending_drives || 0),
     note: "Companies and drives pending",
   },
 ]);
@@ -215,7 +221,11 @@ const lineChartOptions = {
     },
   },
   scales: {
-    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#eef2f7" } },
+    y: {
+      beginAtZero: true,
+      ticks: { precision: 0 },
+      grid: { color: "#eef2f7" },
+    },
     x: { grid: { display: false } },
   },
 };
@@ -236,7 +246,11 @@ const skillChartOptions = {
     legend: { display: false },
   },
   scales: {
-    x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#eef2f7" } },
+    x: {
+      beginAtZero: true,
+      ticks: { precision: 0 },
+      grid: { color: "#eef2f7" },
+    },
     y: { grid: { display: false } },
   },
 };
