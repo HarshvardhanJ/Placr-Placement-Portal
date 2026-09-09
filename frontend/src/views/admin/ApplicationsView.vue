@@ -1,0 +1,318 @@
+<template>
+  <DashboardLayout v-model:search-query="searchQuery">
+    <PageHeader
+      title="Applications"
+      subtitle="Monitor and search all job applications across the platform."
+    />
+
+    <div class="row g-3 mb-4">
+      <div
+        v-for="stat in stats"
+        :key="stat.title"
+        class="col-12 col-sm-6 col-xl-3"
+      >
+        <StatCard :title="stat.title" :value="stat.value" />
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-lg-7">
+            <div class="search-wrap">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="search-icon"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="form-control border-0 shadow-none"
+                placeholder="Search by company, role, or industry..."
+              />
+            </div>
+          </div>
+
+          <div class="col-lg-3">
+            <select v-model="statusFilter" class="form-select">
+              <option value="">All Statuses</option>
+              <option value="applied">Applied</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="selected">Selected</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2">
+            <button
+              class="btn btn-outline-secondary w-100"
+              @click="clearFilters"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="loading" class="card shadow-sm p-5 text-center">
+      Loading applications...
+    </div>
+    <div
+      v-if="!loading && !filteredApplications.length"
+      class="card shadow-sm p-5 text-center"
+    >
+      No applications found.
+    </div>
+    <DataTable
+      title="Applications"
+      :headers="headers"
+      :rows="filteredApplications"
+    >
+      <template #status="{ row }">
+        <span class="badge rounded-pill" :class="statusBadgeClass(row.status)">
+          {{ formatStatus(row.status) }}
+        </span>
+      </template>
+
+      <template #actions="{ row }">
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-sm btn-outline-primary"
+            @click="viewApplication(row)"
+          >
+            View
+          </button>
+        </div>
+      </template>
+    </DataTable>
+
+    <div v-if="showApplicationModal" class="modal d-block" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div>
+              <h5 class="modal-title mt-2 mb-1">Application Details</h5>
+            </div>
+            <button
+              type="button"
+              class="btn-close"
+              @click="showApplicationModal = false"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="text-secondary">Student Name</label>
+                <div class="fw-medium">
+                  {{ selectedApplication?.student_name }}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="text-secondary">Roll No</label>
+                <div class="fw-medium">{{ selectedApplication?.roll_no }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="text-secondary">Company</label>
+                <div class="fw-medium">{{ selectedApplication?.company }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="text-secondary">Job Title</label>
+                <div class="fw-medium">
+                  {{ selectedApplication?.job_title }}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="text-secondary">Status</label>
+                <div class="fw-medium">
+                  {{ formatStatus(selectedApplication?.status) }}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="text-secondary">Applied On</label>
+                <div class="fw-medium">
+                  {{ selectedApplication?.application_date }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              @click="showApplicationModal = false"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showApplicationModal" class="modal-backdrop fade show"></div>
+  </DashboardLayout>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from "vue";
+
+import api from "@/services/api";
+import DashboardLayout from "@/layouts/DashboardLayout.vue";
+import PageHeader from "@/components/shared/PageHeader.vue";
+import DataTable from "@/components/shared/DataTable.vue";
+import StatCard from "@/components/shared/StatCard.vue";
+
+const searchQuery = ref("");
+const statusFilter = ref("");
+
+const selectedApplication = ref(null);
+const showApplicationModal = ref(false);
+const loading = ref(false);
+const applications = ref([]);
+
+const loadApplications = async () => {
+  try {
+    loading.value = true;
+
+    const response = await api.get("/admin/applications");
+
+    applications.value = response.data;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const headers = [
+  { key: "student_name", label: "Student" },
+  { key: "roll_no", label: "Roll No" },
+  { key: "company", label: "Company" },
+  { key: "job_title", label: "Role" },
+  { key: "status", label: "Status" },
+  { key: "application_date", label: "Applied On" },
+  { key: "actions", label: "Actions" },
+];
+
+const clearFilters = () => {
+  searchQuery.value = "";
+  statusFilter.value = "";
+};
+
+const stats = computed(() => [
+  {
+    title: "Applications",
+    value: applications.value.length,
+  },
+  {
+    title: "Applied",
+    value: applications.value.filter((a) => a.status === "applied").length,
+  },
+  {
+    title: "Shortlisted",
+    value: applications.value.filter((a) => a.status === "shortlisted").length,
+  },
+  {
+    title: "Selected",
+    value: applications.value.filter((a) => a.status === "selected").length,
+  },
+]);
+
+onMounted(() => {
+  loadApplications();
+});
+
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case "applied":
+      return "text-bg-secondary";
+
+    case "shortlisted":
+      return "text-bg-warning";
+
+    case "selected":
+      return "text-bg-success";
+
+    case "rejected":
+      return "text-bg-danger";
+
+    default:
+      return "text-bg-light";
+  }
+};
+
+const filteredApplications = computed(() => {
+  return applications.value.filter((application) => {
+    const query = searchQuery.value.toLowerCase();
+
+    const matchesSearch =
+      (application.student_name || "").toLowerCase().includes(query) ||
+      (application.roll_no || "").toLowerCase().includes(query) ||
+      (application.company || "").toLowerCase().includes(query) ||
+      (application.job_title || "").toLowerCase().includes(query) ||
+      (application.status || "").toLowerCase().includes(query);
+
+    const matchesStatus =
+      !statusFilter.value ||
+      application.status.toLowerCase() === statusFilter.value;
+
+    return matchesSearch && matchesStatus;
+  });
+});
+
+const totalApplications = computed(() => applications.value.length);
+const appliedCount = computed(
+  () => applications.value.filter((a) => a.status === "applied").length,
+);
+const shortlistedCount = computed(
+  () => applications.value.filter((a) => a.status === "shortlisted").length,
+);
+const selectedCount = computed(
+  () => applications.value.filter((a) => a.status === "selected").length,
+);
+
+const viewApplication = (application) => {
+  selectedApplication.value = application;
+  showApplicationModal.value = true;
+};
+
+const formatStatus = (status) => {
+  if (!status) return "";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+</script>
+
+<style scoped>
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 0.6rem 0.9rem;
+}
+
+.search-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+</style>
