@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Placement Portal Application
 
 > Full-stack placement management platform built using Flask, Vue.js, Docker, Redis, and Celery.
@@ -227,5 +226,3 @@ flowchart TD
 * Resume screening (ATS)
 * Cloud deployment
 
-```
-=======
