@@ -204,7 +204,7 @@ flowchart TD
 
 ---
 
-## Current Status
+## Completed Features
 
 * Backend APIs implemented
 * Authentication and RBAC completed
@@ -214,15 +214,10 @@ flowchart TD
 * Placement tracking completed
 * Frontend currently under development
 * Redis and Celery integration in progress
-
----
-
-## Future Enhancements
-
 * Redis caching
 * Background task processing using Celery
 * Automated interview reminders
 * Placement analytics dashboard
 * Resume screening (ATS)
-* Cloud deployment
+
 
